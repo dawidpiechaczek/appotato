@@ -1,4 +1,4 @@
-package com.firetms.appotato
+package com.appotato
 
 interface Platform {
     val name: String

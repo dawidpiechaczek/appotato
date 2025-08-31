@@ -1,4 +1,4 @@
-package com.firetms.appotato
+package com.appotato
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

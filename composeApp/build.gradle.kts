@@ -50,11 +50,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.firetms.appotato"
+    namespace = "com.appotato"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.firetms.appotato"
+        applicationId = "com.appotato"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

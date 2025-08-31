@@ -1,4 +1,4 @@
-package com.firetms.appotato
+package com.appotato
 
 class Greeting {
     private val platform = getPlatform()
