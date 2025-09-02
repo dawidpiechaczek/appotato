@@ -18,11 +18,12 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 import appotato.composeapp.generated.resources.Res
 import appotato.composeapp.generated.resources.compose_multiplatform
+import com.appotato.shared.ui.components.AppotatoTheme
 
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
+    AppotatoTheme {
         var showContent by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier
