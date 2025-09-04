@@ -7,18 +7,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-
+import androidx.compose.ui.unit.dp
 import appotato.composeapp.generated.resources.Res
 import appotato.composeapp.generated.resources.compose_multiplatform
 import com.appotato.shared.ui.components.AppotatoTheme
+import com.appotato.shared.ui.components.ElevatedButton
+import com.appotato.shared.ui.components.OutlinedButton
+import com.appotato.shared.ui.components.OutlinedTextField
+import com.appotato.shared.ui.components.TextButton
+import com.appotato.shared.ui.components.TextField
+import com.appotato.shared.ui.components.UrlImage
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
@@ -32,9 +42,21 @@ fun App() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Button(onClick = { showContent = !showContent }) {
+            OutlinedButton(onClick = { showContent = !showContent }) {
                 Text("Click me!")
             }
+            ElevatedButton(onClick = { showContent = !showContent }) {
+                Text("Click me!")
+            }
+            TextButton(onClick = { showContent = !showContent }) {
+                Text("Click me!")
+            }
+            UrlImage(
+                modifier = Modifier.size(width = 100.dp, height = 100.dp),
+                url = "https://www.collinsdictionary.com/dictionary/english/apple",
+            )
+            TextField(value = "", onValueChange = {})
+            OutlinedTextField(value = "", onValueChange = {})
             AnimatedVisibility(showContent) {
                 val greeting = remember { Greeting().greet() }
                 Column(

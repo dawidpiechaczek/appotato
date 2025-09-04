@@ -60,10 +60,10 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.kotlin.stdlib)
                 implementation(libs.compose.material)
-            //    implementation(libs.compose.compiler)
-                // Add KMP dependencies here
+                implementation(libs.coil)
+                implementation(libs.coil.network)
+                implementation(libs.kotlin.stdlib)
             }
         }
 

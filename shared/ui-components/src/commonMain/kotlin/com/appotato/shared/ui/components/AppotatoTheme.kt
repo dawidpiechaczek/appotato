@@ -15,6 +15,8 @@ data class AppotatoColors(
     val primary: Color,
     val secondary: Color,
     val background: List<Color>,
+    val transparent: Color,
+    val white: Color,
     val warning: Color,
     val info: Color,
 )
@@ -39,6 +41,8 @@ internal val LocalCustomColors = staticCompositionLocalOf {
         primary = Color.Unspecified,
         secondary = Color.Unspecified,
         background = emptyList(),
+        transparent = Color.Unspecified,
+        white = Color.Unspecified,
         warning = Color.Unspecified,
         info = Color.Unspecified,
     )
@@ -67,6 +71,8 @@ fun AppotatoTheme(
         primary = Color.Blue,
         secondary = Color.Green,
         background = listOf(Color.White, Color(0xFFF8BBD0)),
+        transparent = Color.Transparent,
+        white = Color.White,
         warning = Color.Red,
         info = Color.Yellow,
     )
