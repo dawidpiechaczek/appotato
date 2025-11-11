@@ -1,15 +1,12 @@
 plugins {
-    id("android.library")
-    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.kotlinMultiplatform)
 }
 
 kotlin {
+
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.compose.material)
-                implementation(libs.coil)
-                implementation(libs.coil.network)
                 implementation(libs.kotlin.stdlib)
             }
         }
@@ -20,5 +17,4 @@ kotlin {
             }
         }
     }
-
 }

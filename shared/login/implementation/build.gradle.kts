@@ -7,10 +7,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.compose.material)
-                implementation(libs.coil)
-                implementation(libs.coil.network)
                 implementation(libs.kotlin.stdlib)
+                implementation(projects.shared.uiComponents)
             }
         }
 
@@ -20,5 +18,4 @@ kotlin {
             }
         }
     }
-
 }

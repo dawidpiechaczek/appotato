@@ -2,6 +2,7 @@ rootProject.name = "Appotato"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             mavenContent {
@@ -30,3 +31,5 @@ dependencyResolutionManagement {
 
 include(":composeApp")
 include(":shared:ui-components")
+include(":shared:login:api")
+include(":shared:login:implementation")
