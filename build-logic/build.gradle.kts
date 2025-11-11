@@ -11,7 +11,11 @@ gradlePlugin {
     plugins {
         register("androidLibrary") {
             id = "android.library"
-            implementationClass = "AndroidLibraryConventionPlugin"
+            implementationClass = "AndroidLibraryPlugin"
+        }
+        register("apiLibrary") {
+            id = "api.library"
+            implementationClass = "ApiLibraryPlugin"
         }
     }
 }

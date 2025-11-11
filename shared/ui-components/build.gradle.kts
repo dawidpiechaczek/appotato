@@ -1,6 +1,5 @@
 plugins {
     id("android.library")
-    alias(libs.plugins.composeMultiplatform)
 }
 
 kotlin {
@@ -10,13 +9,6 @@ kotlin {
                 implementation(libs.compose.material)
                 implementation(libs.coil)
                 implementation(libs.coil.network)
-                implementation(libs.kotlin.stdlib)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
             }
         }
     }

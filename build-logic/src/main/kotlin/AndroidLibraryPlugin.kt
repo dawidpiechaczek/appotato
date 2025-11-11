@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -8,20 +9,17 @@ import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-class AndroidLibraryConventionPlugin : Plugin<Project> {
+class AndroidLibraryPlugin : Plugin<Project> {
     val Project.libs: VersionCatalog
         get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
     override fun apply(target: Project) {
         with(target) {
-            // Apply the essential plugins for a KMP library module
             plugins.apply("org.jetbrains.kotlin.multiplatform")
             plugins.apply("org.jetbrains.kotlin.plugin.compose")
             plugins.apply("com.android.library")
 
-            // Configure the Kotlin Multiplatform extension
             extensions.configure<KotlinMultiplatformExtension> {
-                // Add the Android library target
                 androidTarget {
                     compilations.all {
                         kotlinOptions {
@@ -30,8 +28,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                     }
                 }
 
-                // Example: Add common iOS targets
-                // You can customize this list based on your needs
                 val iosFamily = listOf(
                     iosX64(),
                     iosArm64(),
@@ -41,19 +37,20 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 // Optional: Configure all iOS targets in one go
                 iosFamily.forEach {
                     it.binaries.framework {
-                        baseName = "shared" // Change this to your desired framework name
+                        baseName = "shared"
                     }
                 }
 
-                // Configure source sets (optional, but good practice)
                 sourceSets.commonMain.dependencies {
-                    // Add dependencies common to all KMP library modules here if you have any
-                    // e.g., implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:...")
+                    implementation(libs.findLibrary("kotlin.stdlib").get())
+                }
+
+                sourceSets.commonTest.dependencies {
+                    implementation(libs.findLibrary("kotlin.test").get())
                 }
             }
 
-            // Configure the Android extension
-            extensions.configure<com.android.build.api.dsl.LibraryExtension> {
+            extensions.configure<LibraryExtension> {
                 namespace = "com.appotato.${project.name.replace("-", ".")}"
                 compileSdk = libs.findVersion("android.compileSdk").get().toString().toInt()
 
