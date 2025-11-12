@@ -33,3 +33,6 @@ include(":composeApp")
 include(":shared:ui-components")
 include(":shared:login:api")
 include(":shared:login:implementation")
+include(":shared:storage:api")
+include(":shared:storage:implementation")
+

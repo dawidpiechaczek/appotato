@@ -16,6 +16,7 @@ kotlin = "2.2.10"
 jetbrainsKotlinJvm = "2.2.10"
 kotlinGradlePlugin = "1.9.20"
 kotlinStdlib = "2.2.10"
+kotlinxSerializationJson = "1.4.1"
 runner = "1.7.0"
 core = "1.7.0"
 material = "1.8.2"
@@ -40,6 +41,7 @@ androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 compose-material = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material" }
 coil = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network = { group = "io.coil-kt.coil3", name = "coil-network-ktor3", version.ref = "coil" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

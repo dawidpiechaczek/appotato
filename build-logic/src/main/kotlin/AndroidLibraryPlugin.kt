@@ -37,7 +37,7 @@ class AndroidLibraryPlugin : Plugin<Project> {
                 // Optional: Configure all iOS targets in one go
                 iosFamily.forEach {
                     it.binaries.framework {
-                        baseName = "shared"
+                        baseName = "${project.name.replace("-", ".")}Kit"
                     }
                 }
 
