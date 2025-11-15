@@ -17,13 +17,15 @@ class AndroidLibraryPlugin : Plugin<Project> {
         with(target) {
             plugins.apply("org.jetbrains.kotlin.multiplatform")
             plugins.apply("org.jetbrains.kotlin.plugin.compose")
+            plugins.apply("org.jetbrains.compose")
             plugins.apply("com.android.library")
+            plugins.apply("org.jetbrains.kotlin.plugin.serialization")
 
             extensions.configure<KotlinMultiplatformExtension> {
                 androidTarget {
                     compilations.all {
                         kotlinOptions {
-                            jvmTarget = JvmTarget.JVM_11.target
+                            jvmTarget = JvmTarget.JVM_21.target
                         }
                     }
                 }
@@ -43,6 +45,7 @@ class AndroidLibraryPlugin : Plugin<Project> {
 
                 sourceSets.commonMain.dependencies {
                     implementation(libs.findLibrary("kotlin.stdlib").get())
+                    implementation(libs.findLibrary("compose.material").get())
                 }
 
                 sourceSets.commonTest.dependencies {
@@ -59,8 +62,8 @@ class AndroidLibraryPlugin : Plugin<Project> {
                 }
 
                 compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_11
-                    targetCompatibility = JavaVersion.VERSION_11
+                    sourceCompatibility = JavaVersion.VERSION_21
+                    targetCompatibility = JavaVersion.VERSION_21
                 }
             }
         }

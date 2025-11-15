@@ -17,6 +17,10 @@ gradlePlugin {
             id = "api.library"
             implementationClass = "ApiLibraryPlugin"
         }
+        register("fakeLibrary") {
+            id = "fake.library"
+            implementationClass = "FakeLibraryPlugin"
+        }
     }
 }
 
