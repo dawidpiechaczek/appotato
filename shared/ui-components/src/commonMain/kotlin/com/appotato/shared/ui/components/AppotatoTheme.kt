@@ -70,7 +70,7 @@ fun AppotatoTheme(
     val customColors = AppotatoColors(
         primary = Color.Blue,
         secondary = Color.Green,
-        background = listOf(Color.White, Color(0xFFF8BBD0)),
+        background = listOf(Color.White, Color(color = 0xFFF8BBD0)),
         transparent = Color.Transparent,
         white = Color.White,
         warning = Color.Red,

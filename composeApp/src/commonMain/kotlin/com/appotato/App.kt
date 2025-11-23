@@ -58,7 +58,7 @@ fun App() {
             TextField(value = "", onValueChange = {})
             OutlinedTextField(value = "", onValueChange = {})
             AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
+                val greeting = remember { "Hello World" }
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,

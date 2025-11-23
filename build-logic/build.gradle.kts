@@ -21,10 +21,15 @@ gradlePlugin {
             id = "fake.library"
             implementationClass = "FakeLibraryPlugin"
         }
+        register("detektLibrary") {
+            id = "detekt.library"
+            implementationClass = "LintDetektPlugin"
+        }
     }
 }
 
 dependencies {
+    implementation(libs.detekt.gradle.plugin)
     implementation(libs.gradle)
     implementation(libs.kotlin.gradle.plugin)
 }

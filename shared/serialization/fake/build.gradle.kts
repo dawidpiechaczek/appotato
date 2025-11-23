@@ -1,5 +1,6 @@
 plugins {
     id("fake.library")
+    id("detekt.library")
 }
 
 kotlin {

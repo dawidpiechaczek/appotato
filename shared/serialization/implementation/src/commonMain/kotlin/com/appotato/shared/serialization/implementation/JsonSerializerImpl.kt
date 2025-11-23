@@ -4,6 +4,7 @@ import com.appotato.shared.dispatchers.CoroutineDispatchers
 import com.appotato.shared.serialization.api.JsonSerializer
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 internal class JsonSerializerImpl(
@@ -17,7 +18,7 @@ internal class JsonSerializerImpl(
     ): Result<String> = withContext(coroutineDispatchers.default) {
         try {
             Result.success(json.encodeToString(serializer, value))
-        } catch (exception: Exception) {
+        } catch (exception: SerializationException) {
             Result.failure(exception)
         }
     }
@@ -28,7 +29,7 @@ internal class JsonSerializerImpl(
     ): Result<T> = withContext(coroutineDispatchers.default) {
         try {
             Result.success(json.decodeFromString(deserializer, jsonString))
-        } catch (exception: Exception) {
+        } catch (exception: SerializationException) {
             Result.failure(exception)
         }
     }
