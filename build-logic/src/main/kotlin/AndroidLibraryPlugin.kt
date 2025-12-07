@@ -25,7 +25,7 @@ class AndroidLibraryPlugin : Plugin<Project> {
                 androidTarget {
                     compilations.all {
                         kotlinOptions {
-                            jvmTarget = JvmTarget.JVM_21.target
+                            jvmTarget = "23"
                         }
                     }
                 }

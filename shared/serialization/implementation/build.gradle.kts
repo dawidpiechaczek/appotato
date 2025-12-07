@@ -1,6 +1,7 @@
 plugins {
     id("android.library")
     id("detekt.library")
+    id("kover.library")
 }
 
 kotlin {

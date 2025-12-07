@@ -11,4 +11,5 @@ plugins {
     alias(libs.plugins.androidLint) apply false
     alias(libs.plugins.serialization) apply false
     alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.kover) apply false
 }

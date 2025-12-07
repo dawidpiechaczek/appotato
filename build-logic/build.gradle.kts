@@ -25,11 +25,16 @@ gradlePlugin {
             id = "detekt.library"
             implementationClass = "LintDetektPlugin"
         }
+        register("koverLibrary") {
+            id = "kover.library"
+            implementationClass = "KoverPlugin"
+        }
     }
 }
 
 dependencies {
     implementation(libs.detekt.gradle.plugin)
     implementation(libs.gradle)
+    implementation(libs.kover)
     implementation(libs.kotlin.gradle.plugin)
 }

@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     id("detekt.library")
+    id("kover.library")
 }
 
 kotlin {
