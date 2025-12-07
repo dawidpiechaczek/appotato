@@ -4,6 +4,9 @@ plugins {
     id("kover.library")
 }
 
+setKoverMinLineCoverage(100)
+setKoverMinInstructionCoverage(100)
+
 kotlin {
     sourceSets {
         commonMain {
