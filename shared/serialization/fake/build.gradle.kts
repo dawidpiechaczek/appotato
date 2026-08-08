@@ -7,7 +7,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(projects.shared.serialization.api)
+                api(projects.shared.serialization.api)
             }
         }
     }

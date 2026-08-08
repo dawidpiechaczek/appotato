@@ -30,9 +30,9 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
+include(":features:login:api")
+include(":features:login:implementation")
 include(":shared:ui-components")
-include(":shared:login:api")
-include(":shared:login:implementation")
 include(":shared:storage:api")
 include(":shared:storage:implementation")
 include(":shared:serialization:api")

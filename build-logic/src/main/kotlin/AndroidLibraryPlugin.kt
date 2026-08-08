@@ -6,12 +6,24 @@ import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class AndroidLibraryPlugin : Plugin<Project> {
     val Project.libs: VersionCatalog
         get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
+    // Derived from the full Gradle path, not the name: sibling modules are commonly called
+    // "implementation"/"api", so a name-only value collides across features.
+    // ":shared:ui-components" -> "shared.ui.components"
+    private val Project.modulePackageSuffix: String
+        get() = path.removePrefix(":").replace(":", ".").replace("-", ".")
+
+    // ":shared:ui-components" -> "SharedUiComponentsKit"
+    private val Project.frameworkBaseName: String
+        get() = path.removePrefix(":")
+            .split(":", "-")
+            .joinToString(separator = "") { segment -> segment.replaceFirstChar(Char::uppercase) }
+            .plus("Kit")
 
     override fun apply(target: Project) {
         with(target) {
@@ -39,7 +51,7 @@ class AndroidLibraryPlugin : Plugin<Project> {
                 // Optional: Configure all iOS targets in one go
                 iosFamily.forEach {
                     it.binaries.framework {
-                        baseName = "${project.name.replace("-", ".")}Kit"
+                        baseName = project.frameworkBaseName
                     }
                 }
 
@@ -54,7 +66,7 @@ class AndroidLibraryPlugin : Plugin<Project> {
             }
 
             extensions.configure<LibraryExtension> {
-                namespace = "com.appotato.${project.name.replace("-", ".")}"
+                namespace = "com.appotato.$modulePackageSuffix"
                 compileSdk = libs.findVersion("android.compileSdk").get().toString().toInt()
 
                 defaultConfig {
