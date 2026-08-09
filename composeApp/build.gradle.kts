@@ -5,6 +5,20 @@ plugins {
     alias(libs.plugins.composeCompiler)
     id("detekt.library")
     id("kover.library")
+    // Applied conditionally below — see the comment there.
+    alias(libs.plugins.googleServices) apply false
+    alias(libs.plugins.firebaseCrashlytics) apply false
+}
+
+// google-services.json is per-Firebase-project and is downloaded from the console, so a fresh
+// clone does not have it — and applying these plugins without it fails the whole build. Gate on
+// the file and warn instead. Pairs with the NoOpTelemetry fallback in :shared:telemetry:
+// implementation: no config means telemetry is off, loudly, not that the app refuses to start.
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.googleServices.get().pluginId)
+    apply(plugin = libs.plugins.firebaseCrashlytics.get().pluginId)
+} else {
+    logger.warn("composeApp: google-services.json missing — Firebase Analytics and Crashlytics are disabled.")
 }
 
 kotlin {
@@ -18,13 +32,17 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            // Swift implements Telemetry itself, so the contract has to be visible in the framework.
+            export(projects.shared.telemetry.api)
         }
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.android)
+            implementation(projects.shared.telemetry.implementation)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -36,6 +54,10 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(projects.shared.uiComponents)
+
+            implementation(project.dependencies.platform(libs.koin.bom))
+            implementation(libs.koin.core)
+            api(projects.shared.telemetry.api)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

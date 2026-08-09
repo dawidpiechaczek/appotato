@@ -16,6 +16,7 @@ shared/
   dispatchers/              CoroutineDispatchers (expect/actual per platform)
   serialization/{api,implementation,fake}
   storage/{api,implementation}          KeyValueStorage — impl is TODO stub
+  telemetry/{api,implementation,fake}   Telemetry — analytics + crash reporting, Firebase-backed
 features/                   one submodule per screen or per flow
   login/{api,implementation}            no sources yet, module shell only
 ```
@@ -50,6 +51,36 @@ never collide: `:shared:ui-components` → namespace `com.appotato.shared.ui.com
 `SharedUiComponentsKit`. Keep the Kotlin package equal to the namespace.
 Per-module coverage gates: call `setKoverMinLineCoverage(n)` / `setKoverMinInstructionCoverage(n)`
 at the top level of the module's `build.gradle.kts` (see `shared/serialization/implementation`, set to 100).
+
+## Dependency injection (Koin)
+
+Koin 4.1, BOM-managed. The graph is assembled in `:composeApp`:
+
+- `composeApp/src/commonMain/.../di/Modules.kt` — `expect fun platformModule()` + `appModules()`.
+- Android: `AppotatoApplication.onCreate()` → `setupKoin(this)`, which sets `androidContext` and
+  loads `telemetryModule()` from `:shared:telemetry:implementation`.
+- iOS: `iOSApp.init()` → `FirebaseApp.configure()` then `KoinIosKt.setupKoin(telemetry:)`.
+
+A shared module contributes bindings by exposing a `public fun <name>Module(): Module`; the classes
+behind it stay `internal`. Nothing outside `:composeApp` calls `startKoin`.
+
+## Firebase
+
+Split deliberately: **Android via Kotlin, iOS via Swift.**
+
+- Android — `FirebaseTelemetry` in `:shared:telemetry:implementation/androidMain`, on the native
+  Firebase SDK. No KMP wrapper. SDK auto-inits via `FirebaseInitProvider`.
+- iOS — Swift implements the Kotlin `Telemetry` interface directly
+  (`iosApp/iosApp/FirebaseTelemetry.swift`) and it is injected into Koin at startup. No cinterop,
+  no CocoaPods in Gradle; `:composeApp` `export(projects.shared.telemetry.api)` makes the contract
+  visible in the framework, and a Swift class adopting it must subclass `NSObject`.
+
+Vendor names must not appear in `api` modules — the whole point is that swapping Firebase for
+PostHog is a change in one `implementation` module.
+
+For Auth/Firestore later, use a wrapper (GitLive/KFire) rather than hand-rolled bridges, and keep
+the boundary **domain-level** (`PantryRepository`), never `Collection`/`Document` — otherwise the
+move to an own backend is a rewrite instead of a swap.
 
 ## Feature module architecture (MVI)
 
@@ -105,6 +136,10 @@ only for real manifest entries (permission, provider, activity).
 - `AndroidLibraryPlugin` sets `kotlinOptions.jvmTarget = "23"` while compileOptions/detekt use 21
   (detekt tasks pin their own jvmTarget independently). Write code to 21 semantics.
 - Configuration cache is disabled (`gradle.properties`).
+- `:composeApp` applies the `google-services` / `firebase-crashlytics` plugins **only if
+  `composeApp/google-services.json` exists**, otherwise it warns. Without that file, and without
+  `iosApp/iosApp/GoogleService-Info.plist` plus the Firebase SPM packages, telemetry falls back to
+  `NoOpTelemetry` on Android and the iOS target does not compile.
 
 ## Commands
 
