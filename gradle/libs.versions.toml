@@ -64,6 +64,7 @@ koin-android = { module = "io.insert-koin:koin-android" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-config = { module = "com.google.firebase:firebase-config" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

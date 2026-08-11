@@ -6,8 +6,12 @@ import SwiftUI
 struct iOSApp: App {
 
     init() {
-        let telemetry: Telemetry = Self.configureFirebase() ? FirebaseTelemetry() : NoOpTelemetry()
-        KoinIosKt.setupKoin(telemetry: telemetry)
+        let firebaseConfigured = Self.configureFirebase()
+        let telemetry: Telemetry = firebaseConfigured ? FirebaseTelemetry() : NoOpTelemetry()
+        let remoteConfig: ComposeApp.RemoteConfig = firebaseConfigured
+            ? FirebaseRemoteConfigBinding()
+            : NoOpRemoteConfig()
+        KoinIosKt.setupKoin(telemetry: telemetry, remoteConfig: remoteConfig)
     }
 
     /// Android is initialised by FirebaseInitProvider before Application.onCreate; iOS has no

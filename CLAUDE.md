@@ -17,6 +17,8 @@ shared/
   serialization/{api,implementation,fake}
   storage/{api,implementation}          KeyValueStorage — impl is TODO stub
   telemetry/{api,implementation,fake}   Telemetry — analytics + crash reporting, Firebase-backed
+  remote-config/{api,implementation,fake}  RemoteConfig — server-controlled values, Firebase-backed
+  app-update/{api,implementation,fake}  AppUpdateChecker — version gate on top of remote-config
 features/                   one submodule per screen or per flow
   login/{api,implementation}            no sources yet, module shell only
 ```
@@ -56,10 +58,12 @@ at the top level of the module's `build.gradle.kts` (see `shared/serialization/i
 
 Koin 4.1, BOM-managed. The graph is assembled in `:composeApp`:
 
-- `composeApp/src/commonMain/.../di/Modules.kt` — `expect fun platformModule()` + `appModules()`.
+- `composeApp/src/commonMain/.../di/Modules.kt` — `expect fun platformModules(): List<Module>` +
+  `appModules()`, which appends the platform-independent `appUpdateModule()`.
 - Android: `AppotatoApplication.onCreate()` → `setupKoin(this)`, which sets `androidContext` and
-  loads `telemetryModule()` from `:shared:telemetry:implementation`.
-- iOS: `iOSApp.init()` → `FirebaseApp.configure()` then `KoinIosKt.setupKoin(telemetry:)`.
+  loads `telemetryModule()` + `remoteConfigModule()` from the `implementation` modules.
+- iOS: `iOSApp.init()` → `FirebaseApp.configure()` then
+  `KoinIosKt.setupKoin(telemetry:remoteConfig:)` with the Swift implementations.
 
 A shared module contributes bindings by exposing a `public fun <name>Module(): Module`; the classes
 behind it stay `internal`. Nothing outside `:composeApp` calls `startKoin`.
@@ -68,12 +72,19 @@ behind it stay `internal`. Nothing outside `:composeApp` calls `startKoin`.
 
 Split deliberately: **Android via Kotlin, iOS via Swift.**
 
-- Android — `FirebaseTelemetry` in `:shared:telemetry:implementation/androidMain`, on the native
-  Firebase SDK. No KMP wrapper. SDK auto-inits via `FirebaseInitProvider`.
-- iOS — Swift implements the Kotlin `Telemetry` interface directly
-  (`iosApp/iosApp/FirebaseTelemetry.swift`) and it is injected into Koin at startup. No cinterop,
-  no CocoaPods in Gradle; `:composeApp` `export(projects.shared.telemetry.api)` makes the contract
-  visible in the framework, and a Swift class adopting it must subclass `NSObject`.
+- Android — `FirebaseTelemetry` / `FirebaseRemoteConfig` in the `implementation` modules'
+  `androidMain`, on the native Firebase SDK. No KMP wrapper. SDK auto-inits via
+  `FirebaseInitProvider`.
+- iOS — Swift implements the Kotlin `Telemetry` and `RemoteConfig` interfaces directly
+  (`iosApp/iosApp/FirebaseTelemetry.swift`, `FirebaseRemoteConfigBinding.swift`) and they are
+  injected into Koin at startup. No cinterop, no CocoaPods in Gradle; `:composeApp`
+  `export(projects.shared.<name>.api)` makes each contract visible in the framework, and a Swift
+  class adopting one must subclass `NSObject`. Each SPM product also has to be added to the Xcode
+  target (`packageProductDependencies` in `project.pbxproj`) — Swift files themselves are picked up
+  automatically by the file-system synchronized group.
+- A contract Swift has to implement cannot have `suspend` members: Kotlin suspend functions can't
+  be overridden from Swift. Take a callback in the interface and add a `suspend` extension for
+  Kotlin callers — see `RemoteConfig.refresh`.
 
 Vendor names must not appear in `api` modules — the whole point is that swapping Firebase for
 PostHog is a change in one `implementation` module.
@@ -81,6 +92,30 @@ PostHog is a change in one `implementation` module.
 For Auth/Firestore later, use a wrapper (GitLive/KFire) rather than hand-rolled bridges, and keep
 the boundary **domain-level** (`PantryRepository`), never `Collection`/`Document` — otherwise the
 move to an own backend is a rewrite instead of a swap.
+
+## Remote config and forced updates
+
+`RemoteConfig` (`:shared:remote-config:api`) is the generic getter — string/boolean/long by key,
+plus `refresh()`. Keys are plain strings owned by whoever reads them; unknown or unfetched keys
+return the zero value of their type. Debuggable builds use a 0s minimum fetch interval, release
+builds 1h.
+
+`AppUpdateChecker` (`:shared:app-update:api`) is the one consumer that ships with it. It reads four
+parameters — publish them in the Firebase console, per-platform differences go on *conditions*, not
+on extra keys:
+
+| parameter | example | effect |
+|---|---|---|
+| `app_minimum_version` | `1.4.0` | installed version below it → `AppUpdateStatus.Required` (block) |
+| `app_latest_version` | `1.6.0` | below it → `AppUpdateStatus.Available` (dismissible) |
+| `app_update_message` | `Time to update` | optional copy for the prompt |
+| `app_update_url` | store link | optional, opened from the prompt |
+
+Versions are compared numerically per segment (`AppVersion`), never as strings — `"1.10.0"` sorts
+below `"1.9.0"` lexicographically, which would lock out exactly the users who did update. Anything
+unparseable, including an empty parameter, means `UpToDate`: a typo in the console must not be able
+to brick the app. The installed version is `versionName` on Android and `CFBundleShortVersionString`
+on iOS, so both platforms have to be bumped for a gate to mean the same thing.
 
 ## Environments
 

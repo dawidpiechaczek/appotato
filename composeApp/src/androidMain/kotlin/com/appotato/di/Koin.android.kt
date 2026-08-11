@@ -1,6 +1,7 @@
 package com.appotato.di
 
 import android.app.Application
+import com.appotato.shared.remote.config.implementation.remoteConfigModule
 import com.appotato.shared.telemetry.implementation.telemetryModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -14,4 +15,4 @@ fun setupKoin(application: Application): KoinApplication = startKoin {
     modules(appModules())
 }
 
-internal actual fun platformModule(): Module = telemetryModule()
+internal actual fun platformModules(): List<Module> = listOf(telemetryModule(), remoteConfigModule())
