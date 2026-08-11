@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "360433808381",
+    "project_id": "appotato-dev",
+    "storage_bucket": "appotato-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:360433808381:android:19805d33eecf0121029f94",
+        "android_client_info": {
+          "package_name": "com.appotato.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDv-RgXj38DXLe9SNlZoo5c4rICc1sCUOw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:360433808381:android:4757b83223177302029f94",
+        "android_client_info": {
+          "package_name": "com.appotato.staging"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDv-RgXj38DXLe9SNlZoo5c4rICc1sCUOw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

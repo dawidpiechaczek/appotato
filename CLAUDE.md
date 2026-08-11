@@ -82,6 +82,28 @@ For Auth/Firestore later, use a wrapper (GitLive/KFire) rather than hand-rolled 
 the boundary **domain-level** (`PantryRepository`), never `Collection`/`Document` — otherwise the
 move to an own backend is a rewrite instead of a swap.
 
+## Environments
+
+Three environments, one per Firebase project's worth of config. The suffix lives on the Android
+flavor only — adding one to the `debug` build type too would double the number of package names
+to register.
+
+| Environment | Android variant | applicationId | iOS scheme / configuration | bundle id |
+|---|---|---|---|---|
+| dev | `devDebug` / `devRelease` | `com.appotato.dev` | `Appotato-dev` / `Debug-dev`, `Release-dev` | `com.appotato.Appotato.dev` |
+| staging | `staging…` | `com.appotato.staging` | `Appotato-staging` / … | `com.appotato.Appotato.staging` |
+| prod | `prod…` | `com.appotato` | `Appotato-prod` / … | `com.appotato.Appotato` |
+
+- Android: `composeApp/src/<flavor>/google-services.json` (verified search path), plus
+  `src/<flavor>/res/values/strings.xml` for the launcher label.
+- iOS: `iosApp/Configuration/Config-<env>.xcconfig` sets `APP_ENVIRONMENT`, the bundle id and the
+  display name; `Info.plist` surfaces `AppEnvironment`, and `iOSApp.swift` loads
+  `GoogleService-Info-<env>.plist` through `FirebaseOptions(contentsOfFile:)`. No file-copying
+  build phase.
+- Custom Xcode configuration names mean the Kotlin plugin cannot infer debug vs release, so every
+  configuration sets `KOTLIN_FRAMEWORK_BUILD_TYPE` explicitly. Adding a configuration without it
+  fails the "Compile Kotlin Framework" phase.
+
 ## Feature module architecture (MVI)
 
 Each feature module owns one screen or one flow. Inside `implementation`:
@@ -136,10 +158,11 @@ only for real manifest entries (permission, provider, activity).
 - `AndroidLibraryPlugin` sets `kotlinOptions.jvmTarget = "23"` while compileOptions/detekt use 21
   (detekt tasks pin their own jvmTarget independently). Write code to 21 semantics.
 - Configuration cache is disabled (`gradle.properties`).
-- `:composeApp` applies the `google-services` / `firebase-crashlytics` plugins **only if
-  `composeApp/google-services.json` exists**, otherwise it warns. Without that file, and without
-  `iosApp/iosApp/GoogleService-Info.plist` plus the Firebase SPM packages, telemetry falls back to
-  `NoOpTelemetry` on Android and the iOS target does not compile.
+- The Crashlytics dSYM upload phase **must** pass `-gsp`: its default is a file literally named
+  `GoogleService-Info.plist`, and this app ships one plist per environment. Without it the build
+  fails with `Could not get GOOGLE_APP_ID in Google Services file from build environment`.
+- Firebase iOS comes from SPM (`firebase-ios-sdk`, upToNextMajor from 12.17.0) declared in the
+  Xcode project — not from Gradle. `./gradlew` never resolves it.
 
 ## Commands
 

@@ -1,7 +1,10 @@
+// Shared base. Everything that differs per environment lives in Config-<env>.xcconfig,
+// and everything that differs per build type is set on the build configuration itself
+// (see KOTLIN_FRAMEWORK_BUILD_TYPE in the project file).
+
 TEAM_ID=
 
 PRODUCT_NAME=Appotato
-PRODUCT_BUNDLE_IDENTIFIER=com.appotato.Appotato$(TEAM_ID)
 
 CURRENT_PROJECT_VERSION=1
 MARKETING_VERSION=1.0

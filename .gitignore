@@ -16,3 +16,17 @@ captures
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
+
+# Real credentials. Note what is NOT here: google-services.json and GoogleService-Info-*.plist
+# ship inside the app binary, so they are not secrets and are committed on purpose.
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+*.p8
+*.p12
+*.mobileprovision
+**/firebase-adminsdk-*.json
+**/*service-account*.json
+.env
+.env.*

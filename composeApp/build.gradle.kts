@@ -5,20 +5,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     id("detekt.library")
     id("kover.library")
-    // Applied conditionally below — see the comment there.
-    alias(libs.plugins.googleServices) apply false
-    alias(libs.plugins.firebaseCrashlytics) apply false
-}
-
-// google-services.json is per-Firebase-project and is downloaded from the console, so a fresh
-// clone does not have it — and applying these plugins without it fails the whole build. Gate on
-// the file and warn instead. Pairs with the NoOpTelemetry fallback in :shared:telemetry:
-// implementation: no config means telemetry is off, loudly, not that the app refuses to start.
-if (file("google-services.json").exists()) {
-    apply(plugin = libs.plugins.googleServices.get().pluginId)
-    apply(plugin = libs.plugins.firebaseCrashlytics.get().pluginId)
-} else {
-    logger.warn("composeApp: google-services.json missing — Firebase Analytics and Crashlytics are disabled.")
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.firebaseCrashlytics)
 }
 
 kotlin {
@@ -84,6 +72,21 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+        }
+    }
+
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+        }
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+        }
+        create("prod") {
+            dimension = "environment"
         }
     }
     compileOptions {

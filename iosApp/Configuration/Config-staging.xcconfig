@@ -1,0 +1,6 @@
+#include "Config.xcconfig"
+
+APP_ENVIRONMENT=staging
+
+PRODUCT_BUNDLE_IDENTIFIER=com.appotato.Appotato.staging$(TEAM_ID)
+INFOPLIST_KEY_CFBundleDisplayName=Appotato Staging

@@ -1,0 +1,6 @@
+#include "Config.xcconfig"
+
+APP_ENVIRONMENT=dev
+
+PRODUCT_BUNDLE_IDENTIFIER=com.appotato.Appotato.dev$(TEAM_ID)
+INFOPLIST_KEY_CFBundleDisplayName=Appotato Dev
