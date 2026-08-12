@@ -53,6 +53,11 @@ kotlin {
 
             implementation(projects.shared.appUpdate.api)
             implementation(projects.shared.appUpdate.implementation)
+
+            implementation(projects.shared.dispatchers)
+            implementation(projects.shared.billing.api)
+            implementation(projects.shared.billing.implementation)
+            implementation(projects.features.paywall.implementation)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

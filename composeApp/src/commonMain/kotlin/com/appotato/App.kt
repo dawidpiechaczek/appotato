@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import appotato.composeapp.generated.resources.Res
 import appotato.composeapp.generated.resources.compose_multiplatform
+import com.appotato.features.paywall.implementation.PaywallRoute
 import com.appotato.shared.ui.components.AppotatoTheme
 import com.appotato.shared.ui.components.ElevatedButton
 import com.appotato.shared.ui.components.OutlinedButton
@@ -34,38 +35,56 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Preview
 fun App() {
     AppotatoTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            OutlinedButton(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            ElevatedButton(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            TextButton(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            UrlImage(
-                modifier = Modifier.size(width = 100.dp, height = 100.dp),
-                url = "https://www.collinsdictionary.com/dictionary/english/apple",
+        var showPaywall by remember { mutableStateOf(false) }
+
+        if (showPaywall) {
+            PaywallRoute(
+                modifier = Modifier.safeContentPadding(),
+                onSubscribed = { showPaywall = false },
+                onDismissed = { showPaywall = false },
             )
-            TextField(value = "", onValueChange = {})
-            OutlinedTextField(value = "", onValueChange = {})
-            AnimatedVisibility(showContent) {
-                val greeting = remember { "Hello World" }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
+        } else {
+            ComponentShowcase(onOpenPaywall = { showPaywall = true })
+        }
+    }
+}
+
+@Composable
+private fun ComponentShowcase(onOpenPaywall: () -> Unit) {
+    var showContent by remember { mutableStateOf(false) }
+    Column(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .safeContentPadding()
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        OutlinedButton(onClick = { showContent = !showContent }) {
+            Text("Click me!")
+        }
+        ElevatedButton(onClick = { showContent = !showContent }) {
+            Text("Click me!")
+        }
+        TextButton(onClick = { showContent = !showContent }) {
+            Text("Click me!")
+        }
+        ElevatedButton(onClick = onOpenPaywall) {
+            Text("Appotato Pro")
+        }
+        UrlImage(
+            modifier = Modifier.size(width = 100.dp, height = 100.dp),
+            url = "https://www.collinsdictionary.com/dictionary/english/apple",
+        )
+        TextField(value = "", onValueChange = {})
+        OutlinedTextField(value = "", onValueChange = {})
+        AnimatedVisibility(showContent) {
+            val greeting = remember { "Hello World" }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Image(painterResource(Res.drawable.compose_multiplatform), null)
+                Text("Compose: $greeting")
             }
         }
     }
