@@ -1,36 +1,21 @@
 package com.appotato
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import appotato.composeapp.generated.resources.Res
-import appotato.composeapp.generated.resources.compose_multiplatform
+import com.appotato.features.pantry.implementation.PantryRoute
 import com.appotato.features.paywall.implementation.PaywallRoute
 import com.appotato.shared.ui.components.AppotatoTheme
-import com.appotato.shared.ui.components.ElevatedButton
-import com.appotato.shared.ui.components.OutlinedButton
-import com.appotato.shared.ui.components.OutlinedTextField
-import com.appotato.shared.ui.components.TextButton
-import com.appotato.shared.ui.components.TextField
-import com.appotato.shared.ui.components.UrlImage
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+/**
+ * The whole app is one screen plus a paywall over it. This is deliberately not a navigation graph
+ * yet — there is one destination, and a library added now would only be guessed at.
+ */
 @Composable
 @Preview
 fun App() {
@@ -44,48 +29,10 @@ fun App() {
                 onDismissed = { showPaywall = false },
             )
         } else {
-            ComponentShowcase(onOpenPaywall = { showPaywall = true })
-        }
-    }
-}
-
-@Composable
-private fun ComponentShowcase(onOpenPaywall: () -> Unit) {
-    var showContent by remember { mutableStateOf(false) }
-    Column(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .safeContentPadding()
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        OutlinedButton(onClick = { showContent = !showContent }) {
-            Text("Click me!")
-        }
-        ElevatedButton(onClick = { showContent = !showContent }) {
-            Text("Click me!")
-        }
-        TextButton(onClick = { showContent = !showContent }) {
-            Text("Click me!")
-        }
-        ElevatedButton(onClick = onOpenPaywall) {
-            Text("Appotato Pro")
-        }
-        UrlImage(
-            modifier = Modifier.size(width = 100.dp, height = 100.dp),
-            url = "https://www.collinsdictionary.com/dictionary/english/apple",
-        )
-        TextField(value = "", onValueChange = {})
-        OutlinedTextField(value = "", onValueChange = {})
-        AnimatedVisibility(showContent) {
-            val greeting = remember { "Hello World" }
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Image(painterResource(Res.drawable.compose_multiplatform), null)
-                Text("Compose: $greeting")
-            }
+            PantryRoute(
+                modifier = Modifier.safeContentPadding(),
+                onPaywallRequested = { showPaywall = true },
+            )
         }
     }
 }

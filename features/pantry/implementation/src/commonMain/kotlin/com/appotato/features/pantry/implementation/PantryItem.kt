@@ -1,0 +1,13 @@
+package com.appotato.features.pantry.implementation
+
+import kotlinx.datetime.LocalDate
+
+/**
+ * One thing in the pantry, as the app thinks about it — a `LocalDate` and not the epoch day the
+ * database stores, because "expires on the 14th" is a calendar fact and has no time of day.
+ */
+internal data class PantryItem(
+    val id: String,
+    val name: String,
+    val expiresOn: LocalDate
+)

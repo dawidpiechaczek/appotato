@@ -12,20 +12,28 @@ build-logic/                included build — convention plugins (see below)
 config/detekt/detekt.yml    single detekt ruleset for all modules
 scripts/new-module.sh       module generator — see "Adding a new module"
 shared/
-  ui-components/            design system: AppotatoTheme, Buttons, TextFields, Images (Coil)
+  ui-components/            design system: AppotatoTheme, Buttons, TextFields, Texts, Loaders, Images (Coil)
   dispatchers/              CoroutineDispatchers (expect/actual per platform)
   serialization/{api,implementation,fake}
-  storage/{api,implementation}          KeyValueStorage — impl is TODO stub
+  storage/{api,implementation}          KeyValueStorage — impl is TODO stub, nothing consumes it
+  database/                 Room KMP: AppotatoDatabase, entities, DAOs, databaseModule()
   telemetry/{api,implementation,fake}   Telemetry — analytics + crash reporting, Firebase-backed
   remote-config/{api,implementation,fake}  RemoteConfig — server-controlled values, Firebase-backed
   app-update/{api,implementation,fake}  AppUpdateChecker — version gate on top of remote-config
+  billing/{api,implementation,fake}     Billing — subscriptions and entitlements; impl is a no-op stub
 features/                   one submodule per screen or per flow
   login/{api,implementation}            no sources yet, module shell only
+  pantry/implementation                 main screen: item list, add/delete, free-tier gate
+  paywall/implementation                Pro subscription screen
 ```
 
 Every module is registered in `settings.gradle.kts`. Typesafe project accessors are on:
 depend as `implementation(projects.shared.serialization.api)`, `projects.shared.uiComponents`,
-`projects.features.login.implementation`.
+`projects.features.pantry.implementation`.
+
+`composeApp/App.kt` is the whole navigation: `PantryRoute`, with `PaywallRoute` swapped in on
+`PantryEffect.PaywallRequested`. There is no navigation library — one destination does not justify
+guessing at one.
 
 ## Layering rules
 
@@ -59,7 +67,9 @@ at the top level of the module's `build.gradle.kts` (see `shared/serialization/i
 Koin 4.1, BOM-managed. The graph is assembled in `:composeApp`:
 
 - `composeApp/src/commonMain/.../di/Modules.kt` — `expect fun platformModules(): List<Module>` +
-  `appModules()`, which appends the platform-independent `appUpdateModule()`.
+  `appModules()`, which appends the platform-independent modules: `coreModule()` (the
+  `CoroutineDispatchers` binding), `databaseModule()`, `appUpdateModule()`, `billingModule()`,
+  `pantryModule()`, `paywallModule()`.
 - Android: `AppotatoApplication.onCreate()` → `setupKoin(this)`, which sets `androidContext` and
   loads `telemetryModule()` + `remoteConfigModule()` from the `implementation` modules.
 - iOS: `iOSApp.init()` → `FirebaseApp.configure()` then
@@ -67,6 +77,9 @@ Koin 4.1, BOM-managed. The graph is assembled in `:composeApp`:
 
 A shared module contributes bindings by exposing a `public fun <name>Module(): Module`; the classes
 behind it stay `internal`. Nothing outside `:composeApp` calls `startKoin`.
+
+ViewModels are bound with `viewModelOf(::X)` (`koin-core-viewmodel`) and resolved in Compose with
+`koinViewModel()` (`koin-compose-viewmodel`). Both artifacts are BOM-managed — do not pin them.
 
 ## Firebase
 
@@ -117,6 +130,45 @@ unparseable, including an empty parameter, means `UpToDate`: a typo in the conso
 to brick the app. The installed version is `versionName` on Android and `CFBundleShortVersionString`
 on iOS, so both platforms have to be bumped for a gate to mean the same thing.
 
+## Persistence (Room)
+
+One Room database for the whole app, in `:shared:database` — one file, one connection, one migration
+history. A feature that owned its own would hand the next feature a second `.db`.
+
+- `AppotatoDatabase` is `@ConstructedBy(AppotatoDatabaseConstructor::class)`; the `expect object`
+  is declared by hand and KSP writes the `actual` per target. The `@Suppress("KotlinNoActualForExpect")`
+  on it is required, not optional.
+- KSP has no multiplatform configuration. The processor is added **per target** in
+  `dependencies { add("kspAndroid", …); add("kspIosX64", …); … }` — a missing target compiles until
+  something references the generated code.
+- Dates are stored as epoch-day `Long`, not through a `TypeConverter`, so `ORDER BY` and
+  "expires within N days" stay SQL rather than a filter over the whole table.
+- Schemas are exported to `shared/database/schemas` — commit them, they are the input to migration
+  tests.
+- Entities live in `shared/` even when they describe one feature's data, because `@Database` has to
+  list them. The layering rule is held at the **repository** instead: `:shared:database` contains
+  rows and no meaning, and the feature maps them onto its own domain model.
+
+## Subscriptions and the free tier
+
+`Billing` (`:shared:billing:api`) is the vendor-neutral contract: a `StateFlow<SubscriptionStatus>`
+plus `plans()` / `purchase()` / `restore()` returning `Result`. Store product ids never leave the
+implementation module.
+
+- Gate on `Entitlement`, never on a plan or product id — `observeAccessTo(Entitlement.Pro)` and
+  `hasAccessTo(...)` are the only two things a gated feature should need.
+- `BillingError.Cancelled` is separate on purpose: backing out of the store sheet is the most common
+  outcome of tapping "Subscribe", and showing an error for it makes the paywall look broken.
+- `SubscriptionStatus.Active` carries `willRenew`, `isTrial` and `isInGracePeriod`. Grace period
+  means the renewal charge failed but access continues — ask the user to fix their payment method,
+  do not show a paywall.
+- The free tier is `FREE_TIER_ITEM_LIMIT` in `:features:pantry:implementation`. The check runs
+  through `PantryRepository.count()`, not off the rendered list, so a fast double tap cannot slip
+  past it.
+- `:shared:billing:implementation` currently binds `NoOpBilling` — everyone is on the free tier and
+  every purchase fails with `Unavailable`. That file is the only place a billing vendor may be
+  named; swapping it is the whole integration.
+
 ## Environments
 
 Three environments, one per Firebase project's worth of config. The suffix lives on the Android
@@ -145,13 +197,19 @@ Each feature module owns one screen or one flow. Inside `implementation`:
 
 ```
 com/appotato/features/<name>/
-  <Name>Screen.kt        @Composable, stateless — takes State, emits Intent
+  <Name>Screen.kt        <Name>Route (public entry point) + stateless <Name>Screen
   <Name>ViewModel.kt     androidx.lifecycle.ViewModel (KMP artifact)
   <Name>State.kt         sealed interface or @Immutable data class
   <Name>Intent.kt        sealed interface — user actions
   <Name>Effect.kt        sealed interface — one-shot events (navigation, snackbar)
+  <Name>Module.kt        public fun <name>Module(): Module
   domain/ data/          use cases and sources, all `internal`
 ```
+
+`<Name>Route` and `<name>Module()` are the only `public` declarations in a feature's
+`implementation` module — the same exception `remoteConfigModule()` already is. The ViewModel stays
+`internal` and never appears in `Route`'s signature; the Route takes plain lambdas for its effects
+(`onPaywallRequested`, `onDismissed`) so features never depend on each other.
 
 Contract:
 - `StateFlow<State>` exposed from the ViewModel, collected in Compose via `collectAsStateWithLifecycle()`.
@@ -164,6 +222,9 @@ Contract:
 ## Code conventions
 
 - `api`/`fake` declarations are explicitly `public`; `implementation` classes are `internal`.
+- Top-level `const val` must be `UPPER_SNAKE` (detekt `TopLevelPropertyNaming`), private included.
+  Non-const private top-level vals may be PascalCase — which is why `private val ScreenPadding =
+  24.dp` passes and `private const val Threshold = 5` does not.
 - Suspend functions that can fail return `Result<T>`; catch the specific exception, not `Exception`.
 - Tests: `commonTest`, kotlin.test, `runTest`, backticked names in
   `` `Given <x> When <y> Then <z>` `` form. Fakes over mocking libraries.
@@ -174,8 +235,8 @@ Contract:
 Use the generator — don't hand-write the files:
 
 ```bash
-./scripts/new-module.sh features:pantry --api --impl --mvi        # feature screen with a contract
-./scripts/new-module.sh shared:clock --flat                       # small shared capability
+./scripts/new-module.sh features:shopping-list --api --impl --mvi   # feature screen with a contract
+./scripts/new-module.sh shared:clock --flat                         # small shared capability
 ```
 
 It writes the directories, package path, stub `build.gradle.kts`, `settings.gradle.kts` includes and
@@ -189,10 +250,23 @@ only for real manifest entries (permission, provider, activity).
 
 ## Known gotchas
 
-- `KeyValueStorageImpl.get()` is a `TODO()` stub.
+- **Room is pinned to 2.7.x by the Kotlin version.** `androidx.sqlite:sqlite-bundled` 2.7.0 (pulled
+  by Room 2.8.x) is compiled by Kotlin 2.3.20 and publishes klib ABI 2.3.0; Kotlin 2.2.10 consumes
+  ≤ 2.2.0. Android compiles fine and **only the iOS klib link fails**, with
+  `KLIB resolver: Skipping … having incompatible ABI version`. Raising Room means raising Kotlin
+  first.
+- `kotlinx.datetime` 0.7 hands `Clock` and `Instant` back to the standard library, where they are
+  still experimental. `Clock.System` needs `@OptIn(kotlin.time.ExperimentalTime::class)` — it is
+  confined to `SystemToday` on purpose.
+- detekt `TooManyFunctions` fires at **11** functions in a class, ViewModels included. Pure helpers
+  move to top level rather than being merged away.
+- `KeyValueStorageImpl.get()` is a `TODO()` stub and the interface has no write method. Nothing uses
+  it; persistence goes through Room.
 - `AndroidLibraryPlugin` sets `kotlinOptions.jvmTarget = "23"` while compileOptions/detekt use 21
   (detekt tasks pin their own jvmTarget independently). Write code to 21 semantics.
 - Configuration cache is disabled (`gradle.properties`).
+- Never run two `./gradlew build` invocations at once. They clobber each other's native output and
+  fail with `dsymutil … cannot parse the debug map`, which looks like a source error and is not.
 - The Crashlytics dSYM upload phase **must** pass `-gsp`: its default is a file literally named
   `GoogleService-Info.plist`, and this app ships one plist per environment. Without it the build
   fails with `Could not get GOOGLE_APP_ID in Google Services file from build environment`.
