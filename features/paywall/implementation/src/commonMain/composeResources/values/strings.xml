@@ -2,29 +2,27 @@
 <resources>
 
     <string name="paywall_title">Appotato Pro</string>
-    <string name="paywall_pitch">Bez limitu produktów, wcześniejsze przypomnienia i skaner kodów kreskowych.</string>
+    <string name="paywall_pitch">No item limit, earlier reminders and the barcode scanner.</string>
 
-    <string name="paywall_retry">Spróbuj ponownie</string>
-    <string name="paywall_period_month">mies.</string>
-    <string name="paywall_period_year">rok</string>
+    <string name="paywall_retry">Try again</string>
+    <string name="paywall_period_month">mo</string>
+    <string name="paywall_period_year">yr</string>
     <string name="paywall_price_per_period">%1$s / %2$s</string>
 
-    <string name="paywall_cta_choose_plan">Wybierz plan</string>
-    <string name="paywall_cta_subscribe">Subskrybuj za %1$s</string>
+    <string name="paywall_cta_choose_plan">Choose a plan</string>
+    <string name="paywall_cta_subscribe">Subscribe for %1$s</string>
     <plurals name="paywall_cta_trial">
-        <item quantity="one">Zacznij %1$d dzień za darmo</item>
-        <item quantity="few">Zacznij %1$d dni za darmo</item>
-        <item quantity="many">Zacznij %1$d dni za darmo</item>
-        <item quantity="other">Zacznij %1$d dnia za darmo</item>
+        <item quantity="one">Start %1$d day free</item>
+        <item quantity="other">Start %1$d days free</item>
     </plurals>
 
-    <string name="paywall_restore">Przywróć zakupy</string>
-    <string name="paywall_dismiss">Nie teraz</string>
-    <string name="paywall_message_dismiss">Ukryj</string>
+    <string name="paywall_restore">Restore purchases</string>
+    <string name="paywall_dismiss">Not now</string>
+    <string name="paywall_message_dismiss">Dismiss</string>
 
-    <string name="paywall_error_plans">Nie udało się pobrać planów. Sprawdź połączenie.</string>
-    <string name="paywall_error_purchase">Zakup nie doszedł do skutku.</string>
-    <string name="paywall_error_nothing_to_restore">Na tym koncie nie ma aktywnej subskrypcji.</string>
-    <string name="paywall_error_restore">Nie udało się połączyć ze sklepem. Spróbuj ponownie.</string>
+    <string name="paywall_error_plans">Could not load the plans. Check your connection.</string>
+    <string name="paywall_error_purchase">The purchase did not go through.</string>
+    <string name="paywall_error_nothing_to_restore">There is no active subscription on this account.</string>
+    <string name="paywall_error_restore">Could not reach the store. Try again.</string>
 
 </resources>

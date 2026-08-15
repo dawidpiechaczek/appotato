@@ -1,0 +1,3 @@
+/* Native iOS permission copy — Compose resources cannot reach it, the system shows this string
+   before any Kotlin code runs. Keep in sync with pl.lproj/InfoPlist.strings. */
+"NSCameraUsageDescription" = "Appotato uses the camera to scan a product barcode and add it to your pantry.";

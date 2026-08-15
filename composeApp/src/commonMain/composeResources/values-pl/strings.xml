@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Only the app shell's own copy. Everything a screen says lives in that feature's module. -->
 <resources>
-    <string name="tab_pantry">Pantry</string>
-    <string name="tab_scan">Scan</string>
-    <string name="tab_recipes">Recipes</string>
+    <string name="tab_pantry">Spiżarnia</string>
+    <string name="tab_scan">Skanuj</string>
+    <string name="tab_recipes">Przepisy</string>
 </resources>

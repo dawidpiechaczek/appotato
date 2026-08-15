@@ -7,11 +7,24 @@
 	<key>AppEnvironment</key>
 	<string>$(APP_ENVIRONMENT)</string>
 	<!--
+	  The languages the bundle ships. This is not cosmetic: iOS filters
+	  NSLocale.preferredLanguages down to what the bundle declares, and that filtered list is
+	  exactly what Compose resources read to pick values-<lang>/. Without pl here, a Polish device
+	  reports "en" and the app renders English however many values-pl/ files we ship.
+	  Every language added under composeResources/values-<lang>/ has to be added here too.
+	-->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>pl</string>
+	</array>
+	<!--
 	  Required before AVCaptureDevice may be touched at all: without this key iOS terminates the
 	  app the moment the camera is requested, rather than denying permission.
 	  One Info.plist serves all three environments, so this is not per-configuration.
+	  The value here is the fallback; <lang>.lproj/InfoPlist.strings overrides it per language.
 	-->
 	<key>NSCameraUsageDescription</key>
-	<string>Appotato używa aparatu, żeby zeskanować kod kreskowy produktu i dodać go do spiżarni.</string>
+	<string>Appotato uses the camera to scan a product barcode and add it to your pantry.</string>
 </dict>
 </plist>

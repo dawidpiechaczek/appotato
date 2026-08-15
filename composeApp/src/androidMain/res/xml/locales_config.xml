@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The languages the app ships, listed for Android 13+ so the system offers Appotato its own entry
+  under Settings > Apps > Appotato > Language. Picking one there changes Locale.getDefault(), which
+  is what Compose resources read, so no app-side plumbing is needed.
+
+  Hand-written rather than generated: androidResources.generateLocaleConfig reads Android res/
+  values-<lang>/ folders, and our translations are Compose resources instead — an asset, invisible
+  to AGP. Every language added under composeResources/values-<lang>/ has to be added here too.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="pl" />
+</locale-config>

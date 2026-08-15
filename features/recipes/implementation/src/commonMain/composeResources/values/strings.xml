@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="recipes_title">Przepisy</string>
-    <string name="recipes_empty_title">Jeszcze nic tu nie ma</string>
-    <string name="recipes_empty_body">Podpowiedzi, co ugotować z produktów, którym kończy się ważność, pojawią się tutaj.</string>
+    <string name="recipes_title">Recipes</string>
+    <string name="recipes_empty_title">Nothing here yet</string>
+    <string name="recipes_empty_body">Ideas for what to cook with the items that are about to expire will show up here.</string>
 </resources>
