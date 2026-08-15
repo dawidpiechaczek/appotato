@@ -15,7 +15,8 @@ class FakeLibraryPlugin : Plugin<Project> {
             plugins.apply("org.jetbrains.kotlin.multiplatform")
 
             extensions.configure<KotlinMultiplatformExtension> {
-                iosX64()
+                // No iosX64: that architecture is only the simulator on Intel Macs. Restore it here
+                // and in AndroidLibraryPlugin and :composeApp if the project ever has to build there.
                 iosSimulatorArm64()
                 iosArm64()
                 jvm()

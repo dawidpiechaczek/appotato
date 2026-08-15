@@ -18,13 +18,6 @@ class AndroidLibraryPlugin : Plugin<Project> {
     private val Project.modulePackageSuffix: String
         get() = path.removePrefix(":").replace(":", ".").replace("-", ".")
 
-    // ":shared:ui-components" -> "SharedUiComponentsKit"
-    private val Project.frameworkBaseName: String
-        get() = path.removePrefix(":")
-            .split(":", "-")
-            .joinToString(separator = "") { segment -> segment.replaceFirstChar(Char::uppercase) }
-            .plus("Kit")
-
     override fun apply(target: Project) {
         with(target) {
             plugins.apply("org.jetbrains.kotlin.multiplatform")
@@ -42,18 +35,16 @@ class AndroidLibraryPlugin : Plugin<Project> {
                     }
                 }
 
-                val iosFamily = listOf(
-                    iosX64(),
-                    iosArm64(),
-                    iosSimulatorArm64()
-                )
-
-                // Optional: Configure all iOS targets in one go
-                iosFamily.forEach {
-                    it.binaries.framework {
-                        baseName = project.frameworkBaseName
-                    }
-                }
+                // Targets only — deliberately no `binaries.framework`. Xcode links exactly one
+                // framework, ComposeApp, and it statically embeds every klib below it. Giving each
+                // module its own produced 8 more link tasks per module (debug/release × arm64,
+                // x64, simulatorArm64, fat) that nothing ever consumed, and Kotlin/Native release
+                // linking is the slowest step in the build.
+                // No iosX64: that architecture is only the simulator on Intel Macs, and it was a
+                // third of every iOS compile in the build. Restore it here, in ApiLibraryPlugin,
+                // FakeLibraryPlugin and :composeApp if the project ever has to build there.
+                iosArm64()
+                iosSimulatorArm64()
 
                 sourceSets.commonMain.dependencies {
                     implementation(libs.findLibrary("kotlin.stdlib").get())

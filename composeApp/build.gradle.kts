@@ -12,8 +12,8 @@ plugins {
 kotlin {
     androidTarget()
 
+    // No iosX64 — see AndroidLibraryPlugin for why, and how to put it back.
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach { iosTarget ->

@@ -56,9 +56,14 @@ guessing at one.
 | `detekt.library` | detekt + formatting, config from root | **every** module |
 | `kover.library` | Kover reports + coverage verification | modules with meaningful tests |
 
-`android.library` derives both names from the **Gradle path**, so sibling `api`/`implementation` modules
-never collide: `:shared:ui-components` → namespace `com.appotato.shared.ui.components`, framework
-`SharedUiComponentsKit`. Keep the Kotlin package equal to the namespace.
+`android.library` derives the namespace from the **Gradle path**, so sibling `api`/`implementation`
+modules never collide: `:shared:ui-components` → `com.appotato.shared.ui.components`. Keep the
+Kotlin package equal to the namespace.
+
+It declares the three iOS targets but **no `binaries.framework`**. Xcode links exactly one
+framework, `ComposeApp`, and it statically embeds every klib below it — a framework per module was
+8 extra Kotlin/Native link tasks each (debug/release × arm64, x64, simulatorArm64, fat) that
+nothing consumed. Only `:composeApp` declares a framework.
 Per-module coverage gates: call `setKoverMinLineCoverage(n)` / `setKoverMinInstructionCoverage(n)`
 at the top level of the module's `build.gradle.kts` (see `shared/serialization/implementation`, set to 100).
 
@@ -139,8 +144,10 @@ history. A feature that owned its own would hand the next feature a second `.db`
   is declared by hand and KSP writes the `actual` per target. The `@Suppress("KotlinNoActualForExpect")`
   on it is required, not optional.
 - KSP has no multiplatform configuration. The processor is added **per target** in
-  `dependencies { add("kspAndroid", …); add("kspIosX64", …); … }` — a missing target compiles until
-  something references the generated code.
+  `dependencies { add("kspAndroid", …); add("kspIosArm64", …); … }` — a missing target compiles
+  until something references the generated code, and a target that no longer exists fails
+  configuration outright with `Configuration with name 'kspIosX64' not found`. This list has to
+  track whatever targets the convention plugins declare.
 - Dates are stored as epoch-day `Long`, not through a `TypeConverter`, so `ORDER BY` and
   "expires within N days" stay SQL rather than a filter over the whole table.
 - Schemas are exported to `shared/database/schemas` — commit them, they are the input to migration
@@ -250,11 +257,19 @@ only for real manifest entries (permission, provider, activity).
 
 ## Known gotchas
 
-- **Room is pinned to 2.7.x by the Kotlin version.** `androidx.sqlite:sqlite-bundled` 2.7.0 (pulled
-  by Room 2.8.x) is compiled by Kotlin 2.3.20 and publishes klib ABI 2.3.0; Kotlin 2.2.10 consumes
-  ≤ 2.2.0. Android compiles fine and **only the iOS klib link fails**, with
-  `KLIB resolver: Skipping … having incompatible ABI version`. Raising Room means raising Kotlin
-  first.
+- **Check the klib ABI before pinning any KMP dependency to "latest".** Kotlin 2.2.10 consumes
+  klibs with `abi_version` ≤ 2.2.0. Android compiles regardless, so **only the iOS link fails**,
+  with `KLIB resolver: Skipping … having incompatible ABI version` — which reads like a source
+  error and is not. Check an artifact before raising it:
+
+  ```bash
+  curl -sO https://dl.google.com/dl/android/maven2/androidx/sqlite/sqlite-bundled-iosarm64/2.6.2/sqlite-bundled-iosarm64-2.6.2.klib
+  unzip -p sqlite-bundled-iosarm64-2.6.2.klib '*/manifest' | grep -E 'abi_version|compiler_version'
+  ```
+
+  Room 2.8.4 (ABI 2.2.0) and the `androidx.sqlite` 2.6.2 it asks for are both fine. `sqlite-bundled`
+  **2.7.0** is ABI 2.3.0 and is not — never raise `sqlite` past the version Room's POM requires,
+  because nothing else forces it and the failure surfaces two modules away.
 - **Icons in `composeResources` must be XML vector drawables, never SVG.** compose-resources
   supports SVG everywhere except Android, where `painterResource` throws
   `IllegalStateException: Android platform doesn't support SVG format` — **at runtime**, so the
@@ -269,9 +284,9 @@ only for real manifest entries (permission, provider, activity).
   it; persistence goes through Room.
 - `AndroidLibraryPlugin` sets `kotlinOptions.jvmTarget = "23"` while compileOptions/detekt use 21
   (detekt tasks pin their own jvmTarget independently). Write code to 21 semantics.
-- Configuration cache is disabled (`gradle.properties`).
 - Never run two `./gradlew build` invocations at once. They clobber each other's native output and
   fail with `dsymutil … cannot parse the debug map`, which looks like a source error and is not.
+  Killing one mid-link is not free either: the next invocation can sit on its lock for hours.
 - The Crashlytics dSYM upload phase **must** pass `-gsp`: its default is a file literally named
   `GoogleService-Info.plist`, and this app ships one plist per environment. Without it the build
   fails with `Could not get GOOGLE_APP_ID in Google Services file from build environment`.
@@ -281,8 +296,18 @@ only for real manifest entries (permission, provider, activity).
 ## Commands
 
 ```bash
-./gradlew build                       # everything
-./gradlew detekt                      # lint all modules
-./gradlew koverVerify                 # coverage gates
-./gradlew :composeApp:assembleDebug   # Android app
+./gradlew :features:pantry:implementation:build   # one module: compile + detekt + kover + tests
+./gradlew assembleDevDebug detekt koverVerify     # pre-commit: no iOS, one Android variant
+./gradlew build                                   # everything, iOS linking included
+./gradlew assembleDevDebug                        # Android app (dev flavor)
 ```
+
+Reach for the full `build` only when touching `shared/*` or `build-logic`, or before pushing — it is
+every module × Android debug+release × two iOS targets × detekt + kover + tests, plus six
+`:composeApp` variants (3 flavors × 2 build types), and ~110 Android Lint tasks. Measured on a
+12-core machine: `clean build` **4m29s**, warm full `build` ~15s, `assembleDevDebug detekt
+koverVerify` ~3s, a module-scoped `build` under a second.
+
+Configuration cache and parallel execution are both **on** (`gradle.properties`); turning them off
+costs 7m12s versus 4m29s on the same tree. If a change makes the configuration cache fail, fix the
+offending task rather than switching the flag off — the message names the task and usually the line.
