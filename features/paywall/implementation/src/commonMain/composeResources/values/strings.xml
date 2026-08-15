@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="paywall_title">Appotato Pro</string>
+    <string name="paywall_pitch">Bez limitu produktów, wcześniejsze przypomnienia i skaner kodów kreskowych.</string>
+
+    <string name="paywall_retry">Spróbuj ponownie</string>
+    <string name="paywall_period_month">mies.</string>
+    <string name="paywall_period_year">rok</string>
+    <string name="paywall_price_per_period">%1$s / %2$s</string>
+
+    <string name="paywall_cta_choose_plan">Wybierz plan</string>
+    <string name="paywall_cta_subscribe">Subskrybuj za %1$s</string>
+    <plurals name="paywall_cta_trial">
+        <item quantity="one">Zacznij %1$d dzień za darmo</item>
+        <item quantity="few">Zacznij %1$d dni za darmo</item>
+        <item quantity="many">Zacznij %1$d dni za darmo</item>
+        <item quantity="other">Zacznij %1$d dnia za darmo</item>
+    </plurals>
+
+    <string name="paywall_restore">Przywróć zakupy</string>
+    <string name="paywall_dismiss">Nie teraz</string>
+    <string name="paywall_message_dismiss">Ukryj</string>
+
+    <string name="paywall_error_plans">Nie udało się pobrać planów. Sprawdź połączenie.</string>
+    <string name="paywall_error_purchase">Zakup nie doszedł do skutku.</string>
+    <string name="paywall_error_nothing_to_restore">Na tym koncie nie ma aktywnej subskrypcji.</string>
+    <string name="paywall_error_restore">Nie udało się połączyć ze sklepem. Spróbuj ponownie.</string>
+
+</resources>

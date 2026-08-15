@@ -20,15 +20,32 @@ internal data class PantryEntry(
 internal data class PantryState(
     val isLoading: Boolean = true,
     val entries: List<PantryEntry> = emptyList(),
+    /** Null is "all categories" — the state the chip row starts in. */
+    val categoryFilter: ProductCategory? = null,
+    val isAddSheetOpen: Boolean = false,
     val newItemName: String = "",
     val newItemDays: String = DefaultDaysUntilExpiry,
+    val newItemCategory: ProductCategory = ProductCategory.Other,
+    val newItemQuantity: String = "",
+    /** Set by the scanner, carried into the stored item, cleared once it is saved. */
+    val newItemBarcode: String? = null,
     val isPro: Boolean = false
 ) {
+    val visibleEntries: List<PantryEntry> = categoryFilter
+        ?.let { filter -> entries.filter { entry -> entry.item.category == filter } }
+        ?: entries
+
+    /**
+     * Drives the banner. Already-expired items are not counted: they are shown in red in the list
+     * and "expiring within N days" would be a lie about them.
+     */
+    val expiringSoonCount: Int = entries.count { entry -> entry.status == ExpiryStatus.ExpiringSoon }
+
     val newItemDaysOrNull: Int? = newItemDays.toIntOrNull()
 
     val canAdd: Boolean = newItemName.isNotBlank() && newItemDaysOrNull != null
 
-    /** Null once the user is on Pro — the row counter disappears rather than reading "20 of ∞". */
+    /** Null once the user is on Pro — the counter disappears rather than reading "20 of ∞". */
     val remainingFreeSlots: Int? =
         if (isPro) null else (FREE_TIER_ITEM_LIMIT - entries.size).coerceAtLeast(0)
 

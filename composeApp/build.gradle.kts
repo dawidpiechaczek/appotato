@@ -59,6 +59,7 @@ kotlin {
             implementation(projects.shared.billing.api)
             implementation(projects.shared.billing.implementation)
             implementation(projects.features.paywall.implementation)
+            implementation(projects.features.recipes.implementation)
             implementation(projects.features.pantry.implementation)
         }
         commonTest.dependencies {

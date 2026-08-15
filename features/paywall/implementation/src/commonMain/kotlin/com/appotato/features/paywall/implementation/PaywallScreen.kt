@@ -16,6 +16,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.appotato.features.paywall.implementation.generated.resources.Res
+import com.appotato.features.paywall.implementation.generated.resources.paywall_cta_choose_plan
+import com.appotato.features.paywall.implementation.generated.resources.paywall_cta_subscribe
+import com.appotato.features.paywall.implementation.generated.resources.paywall_cta_trial
+import com.appotato.features.paywall.implementation.generated.resources.paywall_dismiss
+import com.appotato.features.paywall.implementation.generated.resources.paywall_error_nothing_to_restore
+import com.appotato.features.paywall.implementation.generated.resources.paywall_error_plans
+import com.appotato.features.paywall.implementation.generated.resources.paywall_error_purchase
+import com.appotato.features.paywall.implementation.generated.resources.paywall_error_restore
+import com.appotato.features.paywall.implementation.generated.resources.paywall_message_dismiss
+import com.appotato.features.paywall.implementation.generated.resources.paywall_period_month
+import com.appotato.features.paywall.implementation.generated.resources.paywall_period_year
+import com.appotato.features.paywall.implementation.generated.resources.paywall_pitch
+import com.appotato.features.paywall.implementation.generated.resources.paywall_price_per_period
+import com.appotato.features.paywall.implementation.generated.resources.paywall_restore
+import com.appotato.features.paywall.implementation.generated.resources.paywall_retry
+import com.appotato.features.paywall.implementation.generated.resources.paywall_title
 import com.appotato.shared.billing.api.SubscriptionPeriod
 import com.appotato.shared.billing.api.SubscriptionPlan
 import com.appotato.shared.ui.components.AppotatoTheme
@@ -26,6 +43,8 @@ import com.appotato.shared.ui.components.HeaderText
 import com.appotato.shared.ui.components.Loader
 import com.appotato.shared.ui.components.OutlinedButton
 import com.appotato.shared.ui.components.TextButton
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 private val ScreenPadding = 24.dp
@@ -87,12 +106,9 @@ internal fun PaywallScreen(
 
 @Composable
 private fun Pitch() {
-    HeaderText(text = "Appotato Pro", textAlign = TextAlign.Center)
+    HeaderText(text = stringResource(Res.string.paywall_title), textAlign = TextAlign.Center)
     Spacer(modifier = Modifier.height(ItemSpacing))
-    BodyText(
-        text = "Unlimited items, earlier reminders and barcode scanning.",
-        textAlign = TextAlign.Center,
-    )
+    BodyText(text = stringResource(Res.string.paywall_pitch), textAlign = TextAlign.Center)
 }
 
 @Composable
@@ -101,7 +117,7 @@ private fun ColumnScope.Plans(state: PaywallState, onIntent: (PaywallIntent) -> 
         state.isLoading -> Loader()
 
         state.plans.isEmpty() -> OutlinedButton(onClick = { onIntent(PaywallIntent.RetryClicked) }) {
-            BodyText(text = "Try again")
+            BodyText(text = stringResource(Res.string.paywall_retry))
         }
 
         else -> Column(
@@ -125,7 +141,7 @@ private fun ColumnScope.Plans(state: PaywallState, onIntent: (PaywallIntent) -> 
  */
 @Composable
 private fun Plan(plan: SubscriptionPlan, isSelected: Boolean, onClick: () -> Unit) {
-    val label = "${plan.formattedPrice} / ${plan.period.label()}"
+    val label = stringResource(Res.string.paywall_price_per_period, plan.formattedPrice, plan.period.label())
     if (isSelected) {
         ElevatedButton(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
             BodyText(text = label)
@@ -141,11 +157,11 @@ private fun Plan(plan: SubscriptionPlan, isSelected: Boolean, onClick: () -> Uni
 private fun Message(message: PaywallMessage, onDismiss: () -> Unit) {
     CommentText(
         text = message.text(),
-        color = AppotatoTheme.colors.warning,
+        color = AppotatoTheme.colors.danger,
         textAlign = TextAlign.Center,
     )
     TextButton(onClick = onDismiss) {
-        CommentText(text = "Dismiss")
+        CommentText(text = stringResource(Res.string.paywall_message_dismiss))
     }
 }
 
@@ -162,27 +178,30 @@ private fun Actions(state: PaywallState, onIntent: (PaywallIntent) -> Unit) {
         enabled = !state.isWorking,
         onClick = { onIntent(PaywallIntent.RestoreClicked) },
     ) {
-        CommentText(text = "Restore purchases")
+        CommentText(text = stringResource(Res.string.paywall_restore))
     }
     TextButton(onClick = { onIntent(PaywallIntent.CloseClicked) }) {
-        CommentText(text = "Not now")
+        CommentText(text = stringResource(Res.string.paywall_dismiss))
     }
 }
 
+@Composable
 private fun SubscriptionPlan?.callToAction(): String = when {
-    this == null -> "Choose a plan"
-    freeTrialDays > 0 -> "Start $freeTrialDays days free"
-    else -> "Subscribe for $formattedPrice"
+    this == null -> stringResource(Res.string.paywall_cta_choose_plan)
+    freeTrialDays > 0 -> pluralStringResource(Res.plurals.paywall_cta_trial, freeTrialDays, freeTrialDays)
+    else -> stringResource(Res.string.paywall_cta_subscribe, formattedPrice)
 }
 
+@Composable
 private fun SubscriptionPeriod.label(): String = when (this) {
-    SubscriptionPeriod.Monthly -> "month"
-    SubscriptionPeriod.Yearly -> "year"
+    SubscriptionPeriod.Monthly -> stringResource(Res.string.paywall_period_month)
+    SubscriptionPeriod.Yearly -> stringResource(Res.string.paywall_period_year)
 }
 
+@Composable
 private fun PaywallMessage.text(): String = when (this) {
-    PaywallMessage.PlansUnavailable -> "Could not load the plans. Check your connection."
-    PaywallMessage.PurchaseFailed -> "The purchase did not go through."
-    PaywallMessage.NothingToRestore -> "No subscription found on this store account."
-    PaywallMessage.RestoreFailed -> "Could not reach the store. Try again."
+    PaywallMessage.PlansUnavailable -> stringResource(Res.string.paywall_error_plans)
+    PaywallMessage.PurchaseFailed -> stringResource(Res.string.paywall_error_purchase)
+    PaywallMessage.NothingToRestore -> stringResource(Res.string.paywall_error_nothing_to_restore)
+    PaywallMessage.RestoreFailed -> stringResource(Res.string.paywall_error_restore)
 }

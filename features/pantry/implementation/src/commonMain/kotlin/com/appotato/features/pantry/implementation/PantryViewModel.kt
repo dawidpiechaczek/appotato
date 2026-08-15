@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ import kotlin.uuid.Uuid
 internal class PantryViewModel(
     private val repository: PantryRepository,
     private val billing: Billing,
+    private val pendingScan: PendingScan,
     private val today: Today,
     private val dispatchers: CoroutineDispatchers
 ) : ViewModel() {
@@ -35,13 +37,19 @@ internal class PantryViewModel(
     val effects: Flow<PantryEffect> = _effects.receiveAsFlow()
 
     init {
-        observe()
+        observeItems()
+        observeScans()
     }
 
     fun onIntent(intent: PantryIntent) {
         when (intent) {
             is PantryIntent.NameChanged -> _state.update { it.copy(newItemName = intent.name) }
             is PantryIntent.DaysChanged -> _state.update { it.copy(newItemDays = intent.days) }
+            is PantryIntent.QuantityChanged -> _state.update { it.copy(newItemQuantity = intent.quantity) }
+            is PantryIntent.CategorySelected -> _state.update { it.copy(newItemCategory = intent.category) }
+            is PantryIntent.CategoryFilterSelected -> _state.update { it.copy(categoryFilter = intent.category) }
+            PantryIntent.AddSheetOpened -> _state.update { it.copy(isAddSheetOpen = true) }
+            PantryIntent.AddSheetDismissed -> _state.update { it.copy(isAddSheetOpen = false) }
             PantryIntent.AddClicked -> addItem()
             is PantryIntent.DeleteClicked -> launchOnIo { repository.remove(intent.id) }
             PantryIntent.UpgradeClicked -> launchOnIo { _effects.send(PantryEffect.PaywallRequested) }
@@ -52,10 +60,21 @@ internal class PantryViewModel(
      * The list and the entitlement are one stream: losing Pro has to shrink the free-slot counter
      * on the same frame the list redraws, not one recomposition later.
      */
-    private fun observe() = launchOnIo {
+    private fun observeItems() = launchOnIo {
         combine(repository.observeItems(), billing.status) { items, status ->
             items to (Entitlement.Pro in status.entitlements)
         }.collect { (items, isPro) -> onData(items, isPro) }
+    }
+
+    /**
+     * A code from the scanner tab opens the add sheet with the barcode already attached. The name
+     * still has to be typed — resolving a barcode to a product needs a lookup this build lacks.
+     */
+    private fun observeScans() = launchOnIo {
+        pendingScan.barcode.filterNotNull().collect { barcode ->
+            _state.update { it.copy(isAddSheetOpen = true, newItemBarcode = barcode) }
+            pendingScan.consume()
+        }
     }
 
     private fun onData(items: List<PantryItem>, isPro: Boolean) {
@@ -85,8 +104,10 @@ internal class PantryViewModel(
                 _effects.send(PantryEffect.PaywallRequested)
             } else {
                 repository.add(newItem(name, days))
-                // Only the name clears: the next item usually keeps the same shelf life.
-                _state.update { it.copy(newItemName = "") }
+                // The category and shelf life stay: shopping comes in runs of similar things.
+                _state.update {
+                    it.copy(isAddSheetOpen = false, newItemName = "", newItemQuantity = "", newItemBarcode = null)
+                }
             }
         }
     }
@@ -102,7 +123,10 @@ internal class PantryViewModel(
     private fun newItem(name: String, days: Int) = PantryItem(
         id = Uuid.random().toString(),
         name = name,
-        expiresOn = today().plus(days, DateTimeUnit.DAY)
+        expiresOn = today().plus(days, DateTimeUnit.DAY),
+        category = _state.value.newItemCategory,
+        quantity = _state.value.newItemQuantity.trim(),
+        barcode = _state.value.newItemBarcode
     )
 
     private fun launchOnIo(block: suspend () -> Unit) = viewModelScope.launch(dispatchers.io) { block() }

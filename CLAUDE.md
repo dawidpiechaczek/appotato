@@ -255,6 +255,11 @@ only for real manifest entries (permission, provider, activity).
   ≤ 2.2.0. Android compiles fine and **only the iOS klib link fails**, with
   `KLIB resolver: Skipping … having incompatible ABI version`. Raising Room means raising Kotlin
   first.
+- **Icons in `composeResources` must be XML vector drawables, never SVG.** compose-resources
+  supports SVG everywhere except Android, where `painterResource` throws
+  `IllegalStateException: Android platform doesn't support SVG format` — **at runtime**, so the
+  build, detekt and the unit tests all pass and the app dies on first composition. XML vector
+  drawables work on both platforms; the `pathData` is the same string as an SVG `d` attribute.
 - `kotlinx.datetime` 0.7 hands `Clock` and `Instant` back to the standard library, where they are
   still experimental. `Clock.System` needs `@OptIn(kotlin.time.ExperimentalTime::class)` — it is
   confined to `SystemToday` on purpose.

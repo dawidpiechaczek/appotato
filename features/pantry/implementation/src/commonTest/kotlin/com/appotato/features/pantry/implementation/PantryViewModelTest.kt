@@ -35,6 +35,7 @@ class PantryViewModelTest {
     private val today = LocalDate(2026, 8, 12)
     private val billing = BillingFake()
     private var repository = PantryRepositoryFake()
+    private val pendingScan = PendingScan()
 
     @BeforeTest
     fun setUp() {
@@ -46,7 +47,7 @@ class PantryViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = PantryViewModel(repository, billing, { today }, dispatchers)
+    private fun viewModel() = PantryViewModel(repository, billing, pendingScan, { today }, dispatchers)
 
     private fun item(id: String, name: String, expiresOn: LocalDate) =
         PantryItem(id = id, name = name, expiresOn = expiresOn)
@@ -266,6 +267,91 @@ class PantryViewModelTest {
             assertTrue(viewModel.state.value.isPro)
             assertNull(viewModel.state.value.remainingFreeSlots)
         }
+
+    @Test
+    fun `Given a category is picked When the item is stored Then it carries that category`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onIntent(PantryIntent.NameChanged("Mleko"))
+        viewModel.onIntent(PantryIntent.QuantityChanged("1 l"))
+        viewModel.onIntent(PantryIntent.CategorySelected(ProductCategory.Dairy))
+        viewModel.onIntent(PantryIntent.AddClicked)
+        advanceUntilIdle()
+
+        val stored = repository.current.single()
+        assertEquals(ProductCategory.Dairy, stored.category)
+        assertEquals("1 l", stored.quantity)
+    }
+
+    @Test
+    fun `Given an item was added When the form resets Then the category is kept for the next one`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onIntent(PantryIntent.CategorySelected(ProductCategory.Dairy))
+            viewModel.onIntent(PantryIntent.NameChanged("Mleko"))
+            viewModel.onIntent(PantryIntent.AddClicked)
+            advanceUntilIdle()
+
+            assertEquals(ProductCategory.Dairy, viewModel.state.value.newItemCategory)
+            assertEquals("", viewModel.state.value.newItemName)
+        }
+
+    @Test
+    fun `Given a quantity of only spaces When the item is stored Then it is empty`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onIntent(PantryIntent.NameChanged("Mleko"))
+        viewModel.onIntent(PantryIntent.QuantityChanged("   "))
+        viewModel.onIntent(PantryIntent.AddClicked)
+        advanceUntilIdle()
+
+        assertEquals("", repository.current.single().quantity)
+    }
+
+    @Test
+    fun `Given a category filter is chosen When the list is read Then only it is visible`() = runTest(dispatcher) {
+        repository = PantryRepositoryFake(
+            listOf(
+                item("1", "Mleko", today).copy(category = ProductCategory.Dairy),
+                item("2", "Pomidor", today).copy(category = ProductCategory.Vegetables)
+            )
+        )
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onIntent(PantryIntent.CategoryFilterSelected(ProductCategory.Dairy))
+
+        assertContentEquals(listOf("Mleko"), viewModel.state.value.visibleEntries.map { it.item.name })
+    }
+
+    @Test
+    fun `Given a filter is active When it is cleared Then everything is visible again`() = runTest(dispatcher) {
+        repository = PantryRepositoryFake(listOf(item("1", "Mleko", today)))
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        viewModel.onIntent(PantryIntent.CategoryFilterSelected(ProductCategory.Meat))
+
+        viewModel.onIntent(PantryIntent.CategoryFilterSelected(null))
+
+        assertNull(viewModel.state.value.categoryFilter)
+        assertEquals(1, viewModel.state.value.visibleEntries.size)
+    }
+
+    @Test
+    fun `Given the add action When it is opened and dismissed Then the sheet follows`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onIntent(PantryIntent.AddSheetOpened)
+        assertTrue(viewModel.state.value.isAddSheetOpen)
+
+        viewModel.onIntent(PantryIntent.AddSheetDismissed)
+        assertFalse(viewModel.state.value.isAddSheetOpen)
+    }
 
     @Test
     fun `Given the upgrade link When it is clicked Then the paywall is requested`() = runTest(dispatcher) {

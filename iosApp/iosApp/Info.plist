@@ -6,5 +6,12 @@
 	<true/>
 	<key>AppEnvironment</key>
 	<string>$(APP_ENVIRONMENT)</string>
+	<!--
+	  Required before AVCaptureDevice may be touched at all: without this key iOS terminates the
+	  app the moment the camera is requested, rather than denying permission.
+	  One Info.plist serves all three environments, so this is not per-configuration.
+	-->
+	<key>NSCameraUsageDescription</key>
+	<string>Appotato używa aparatu, żeby zeskanować kod kreskowy produktu i dodać go do spiżarni.</string>
 </dict>
 </plist>

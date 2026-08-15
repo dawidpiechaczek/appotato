@@ -11,6 +11,8 @@ kover {
     reports {
         filters {
             excludes {
+                // Generated compose-resources accessors: a table of string ids, not behaviour.
+                packages("com.appotato.features.paywall.implementation.generated.resources")
                 // Composables and Koin wiring. Covering these needs a Compose UI test and a running
                 // graph, which would assert that Compose and Koin work rather than that the paywall
                 // does — the reducer below it is where the logic lives.
@@ -25,6 +27,13 @@ kover {
     }
 }
 
+compose.resources {
+    // Generated accessors stay internal — strings are an implementation detail of the feature.
+    publicResClass = false
+    packageOfResClass = "com.appotato.features.paywall.implementation.generated.resources"
+    generateResClass = always
+}
+
 kotlin {
     sourceSets {
         commonMain {
@@ -32,6 +41,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
 
+                implementation(compose.components.resources)
                 implementation(projects.shared.uiComponents)
                 implementation(projects.shared.dispatchers)
                 implementation(projects.shared.billing.api)

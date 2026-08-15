@@ -19,6 +19,10 @@ data class AppotatoColors(
     val white: Color,
     val warning: Color,
     val info: Color,
+    val danger: Color,
+    val caution: Color,
+    val success: Color,
+    val muted: Color,
 )
 
 @Immutable
@@ -45,6 +49,10 @@ internal val LocalCustomColors = staticCompositionLocalOf {
         white = Color.Unspecified,
         warning = Color.Unspecified,
         info = Color.Unspecified,
+        danger = Color.Unspecified,
+        caution = Color.Unspecified,
+        success = Color.Unspecified,
+        muted = Color.Unspecified,
     )
 }
 internal val LocalCustomTypography = staticCompositionLocalOf {
@@ -75,6 +83,10 @@ fun AppotatoTheme(
         white = Color.White,
         warning = Color.Red,
         info = Color.Yellow,
+        danger = Color(color = 0xFFEF4444),
+        caution = Color(color = 0xFFF59E0B),
+        success = Color(color = 0xFF10B981),
+        muted = Color(color = 0xFF6B7280),
     )
     val customTypography = AppotatoTypography(
         header = TextStyle(fontSize = 32.sp),

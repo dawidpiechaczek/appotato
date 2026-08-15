@@ -1,37 +1,51 @@
 package com.appotato.features.pantry.implementation
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.appotato.features.pantry.implementation.generated.resources.Res
+import com.appotato.features.pantry.implementation.generated.resources.pantry_add_open
+import com.appotato.features.pantry.implementation.generated.resources.pantry_empty
+import com.appotato.features.pantry.implementation.generated.resources.pantry_empty_filtered
+import com.appotato.features.pantry.implementation.generated.resources.pantry_expiring_banner
+import com.appotato.features.pantry.implementation.generated.resources.pantry_filter_all
+import com.appotato.features.pantry.implementation.generated.resources.pantry_free_full
+import com.appotato.features.pantry.implementation.generated.resources.pantry_free_slots_left
+import com.appotato.features.pantry.implementation.generated.resources.pantry_go_pro
+import com.appotato.features.pantry.implementation.generated.resources.pantry_subtitle_count
+import com.appotato.features.pantry.implementation.generated.resources.pantry_title
+import com.appotato.shared.ui.components.AppotatoIcon
 import com.appotato.shared.ui.components.AppotatoTheme
+import com.appotato.shared.ui.components.Banner
 import com.appotato.shared.ui.components.BodyText
+import com.appotato.shared.ui.components.Chip
+import com.appotato.shared.ui.components.CircularAction
 import com.appotato.shared.ui.components.CommentText
-import com.appotato.shared.ui.components.ElevatedButton
-import com.appotato.shared.ui.components.HeaderText
 import com.appotato.shared.ui.components.Loader
-import com.appotato.shared.ui.components.OutlinedTextField
+import com.appotato.shared.ui.components.ScreenHeader
 import com.appotato.shared.ui.components.TextButton
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
-private val ScreenPadding = 16.dp
+private val HorizontalPadding = 16.dp
 private val ItemSpacing = 8.dp
-private val DaysFieldWidth = 96.dp
+private const val FREE_TIER_NOTICE_THRESHOLD = 5
 
 /**
  * Entry point of the feature. [onPaywallRequested] is the host's cue to show the paywall — this
@@ -62,53 +76,88 @@ internal fun PantryScreen(
     onIntent: (PantryIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxSize().padding(ScreenPadding),
-        verticalArrangement = Arrangement.spacedBy(ItemSpacing),
-    ) {
-        HeaderText(text = "Pantry")
-        AddItemRow(state = state, onIntent = onIntent)
-        FreeTierNotice(state = state, onIntent = onIntent)
+    Column(modifier = modifier.fillMaxSize()) {
+        ScreenHeader(
+            title = stringResource(Res.string.pantry_title),
+            subtitle = pluralStringResource(
+                Res.plurals.pantry_subtitle_count,
+                state.entries.size,
+                state.entries.size,
+            ),
+            action = {
+                CircularAction(
+                    icon = AppotatoIcon.Add,
+                    contentDescription = stringResource(Res.string.pantry_add_open),
+                    onClick = { onIntent(PantryIntent.AddSheetOpened) },
+                )
+            },
+        )
 
-        if (state.isLoading) {
-            Loader()
-        } else {
-            ItemList(state = state, onIntent = onIntent)
+        Column(
+            modifier = Modifier.padding(horizontal = HorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(ItemSpacing),
+        ) {
+            ExpiringBanner(count = state.expiringSoonCount)
+            FreeTierNotice(state = state, onIntent = onIntent)
+            CategoryFilters(selected = state.categoryFilter, onSelected = { category ->
+                onIntent(PantryIntent.CategoryFilterSelected(category))
+            })
         }
+
+        when {
+            state.isLoading -> Loader(modifier = Modifier.padding(HorizontalPadding))
+            state.visibleEntries.isEmpty() -> EmptyState(isFiltered = state.categoryFilter != null)
+            else -> ItemList(state = state, onIntent = onIntent)
+        }
+    }
+
+    if (state.isAddSheetOpen) {
+        AddItemSheet(
+            state = state,
+            onIntent = onIntent,
+            onDismiss = { onIntent(PantryIntent.AddSheetDismissed) },
+        )
     }
 }
 
 @Composable
-private fun AddItemRow(state: PantryState, onIntent: (PantryIntent) -> Unit) {
-    Row(
+private fun ExpiringBanner(count: Int) {
+    if (count == 0) return
+    Banner(
         modifier = Modifier.fillMaxWidth(),
+        text = pluralStringResource(Res.plurals.pantry_expiring_banner, count, count),
+        color = AppotatoTheme.colors.caution,
+    )
+}
+
+/**
+ * Scrolls horizontally rather than wrapping: six categories plus "all" do not fit on a phone, and
+ * a second row of chips pushes the list itself below the fold.
+ */
+@Composable
+private fun CategoryFilters(selected: ProductCategory?, onSelected: (ProductCategory?) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(ItemSpacing),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        OutlinedTextField(
-            modifier = Modifier.weight(weight = 1f),
-            label = { CommentText(text = "What did you buy?") },
-            value = state.newItemName,
-            onValueChange = { name -> onIntent(PantryIntent.NameChanged(name)) },
+        Chip(
+            text = stringResource(Res.string.pantry_filter_all),
+            isSelected = selected == null,
+            onClick = { onSelected(null) },
         )
-        OutlinedTextField(
-            modifier = Modifier.width(DaysFieldWidth),
-            label = { CommentText(text = "Days") },
-            value = state.newItemDays,
-            onValueChange = { days -> onIntent(PantryIntent.DaysChanged(days)) },
-        )
-        ElevatedButton(
-            enabled = state.canAdd,
-            onClick = { onIntent(PantryIntent.AddClicked) },
-        ) {
-            BodyText(text = "Add")
+        ProductCategory.entries.forEach { category ->
+            Chip(
+                text = stringResource(category.label),
+                isSelected = category == selected,
+                onClick = { onSelected(category) },
+            )
         }
     }
 }
 
 /**
- * The counter only appears once the free tier is nearly full — showing "20 slots left" on an empty
- * pantry advertises a limit nobody has hit yet.
+ * The counter only appears once the free tier is nearly full — announcing "20 slots left" on an
+ * empty pantry advertises a limit nobody has hit yet.
  */
 @Composable
 private fun FreeTierNotice(state: PantryState, onIntent: (PantryIntent) -> Unit) {
@@ -117,57 +166,37 @@ private fun FreeTierNotice(state: PantryState, onIntent: (PantryIntent) -> Unit)
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         CommentText(
-            text = if (remaining == 0) "Pantry full" else "$remaining slots left",
-            color = AppotatoTheme.colors.warning,
+            text = if (remaining == 0) {
+                stringResource(Res.string.pantry_free_full)
+            } else {
+                pluralStringResource(Res.plurals.pantry_free_slots_left, remaining, remaining)
+            },
+            color = AppotatoTheme.colors.caution,
         )
         TextButton(onClick = { onIntent(PantryIntent.UpgradeClicked) }) {
-            CommentText(text = "Go Pro")
+            CommentText(text = stringResource(Res.string.pantry_go_pro))
         }
     }
 }
+
+@Composable
+private fun EmptyState(isFiltered: Boolean) = BodyText(
+    modifier = Modifier.padding(HorizontalPadding),
+    text = if (isFiltered) {
+        stringResource(Res.string.pantry_empty_filtered)
+    } else {
+        stringResource(Res.string.pantry_empty)
+    },
+)
 
 @Composable
 private fun ItemList(state: PantryState, onIntent: (PantryIntent) -> Unit) {
-    if (state.entries.isEmpty()) {
-        BodyText(text = "Nothing here yet. Add what is in your fridge.")
-        return
-    }
-
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(ItemSpacing)) {
-        items(items = state.entries, key = { entry -> entry.item.id }) { entry ->
-            PantryRow(entry = entry, onDelete = { onIntent(PantryIntent.DeleteClicked(entry.item.id)) })
-        }
-    }
-}
-
-@Composable
-private fun PantryRow(entry: PantryEntry, onDelete: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(ItemSpacing),
+        contentPadding = PaddingValues(all = HorizontalPadding),
     ) {
-        Column(modifier = Modifier.weight(weight = 1f)) {
-            BodyText(text = entry.item.name)
-            CommentText(text = entry.expiryLabel(), color = entry.status.color())
-        }
-        TextButton(onClick = onDelete) {
-            CommentText(text = "Delete")
+        items(items = state.visibleEntries, key = { entry -> entry.item.id }) { entry ->
+            PantryCard(entry = entry, onDelete = { onIntent(PantryIntent.DeleteClicked(entry.item.id)) })
         }
     }
-    Spacer(modifier = Modifier.height(ItemSpacing))
-}
-
-private const val FREE_TIER_NOTICE_THRESHOLD = 5
-
-private fun PantryEntry.expiryLabel(): String = when {
-    daysUntilExpiry < 0 -> "Expired ${-daysUntilExpiry}d ago"
-    daysUntilExpiry == 0 -> "Expires today"
-    else -> "Expires in ${daysUntilExpiry}d"
-}
-
-@Composable
-private fun ExpiryStatus.color(): Color = when (this) {
-    ExpiryStatus.Expired -> AppotatoTheme.colors.warning
-    ExpiryStatus.ExpiringSoon -> AppotatoTheme.colors.info
-    ExpiryStatus.Fresh -> AppotatoTheme.colors.primary
 }

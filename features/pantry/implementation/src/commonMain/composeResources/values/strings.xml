@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Polish is the default locale, so it lives in values/ with no suffix. Any other language goes in
+  values-<lang>/ and falls back to this file for anything it does not translate.
+-->
+<resources>
+
+    <string name="pantry_title">Moja spiżarnia</string>
+    <string name="pantry_empty">Pusto. Dodaj to, co masz w lodówce.</string>
+    <string name="pantry_empty_filtered">Nic w tej kategorii.</string>
+
+    <plurals name="pantry_subtitle_count">
+        <item quantity="one">%1$d produkt w spisie</item>
+        <item quantity="few">%1$d produkty w spisie</item>
+        <item quantity="many">%1$d produktów w spisie</item>
+        <item quantity="other">%1$d produktu w spisie</item>
+    </plurals>
+
+    <!-- Dative case: "produktowi/produktom kończy się ważność". -->
+    <plurals name="pantry_expiring_banner">
+        <item quantity="one">%1$d produktowi kończy się ważność w ciągu 3 dni</item>
+        <item quantity="few">%1$d produktom kończy się ważność w ciągu 3 dni</item>
+        <item quantity="many">%1$d produktom kończy się ważność w ciągu 3 dni</item>
+        <item quantity="other">%1$d produktom kończy się ważność w ciągu 3 dni</item>
+    </plurals>
+
+    <string name="pantry_filter_all">Wszystkie</string>
+
+    <string name="pantry_add_open">Dodaj produkt</string>
+    <string name="pantry_add_title">Dodaj produkt</string>
+    <string name="pantry_add_name_label">Co kupiłeś?</string>
+    <string name="pantry_add_days_label">Dni</string>
+    <string name="pantry_add_quantity_label">Ilość</string>
+    <string name="pantry_add_action">Dodaj</string>
+    <string name="pantry_add_scanned">Zeskanowany kod: %1$s</string>
+    <string name="pantry_delete_action">Usuń</string>
+
+    <!-- Compact by design: the badge sits at the end of a row and competes with the product name. -->
+    <string name="pantry_badge_days">%1$dd</string>
+    <string name="pantry_badge_today">dziś</string>
+    <string name="pantry_badge_expired">-%1$dd</string>
+    <string name="pantry_item_meta">%1$s • %2$s</string>
+
+    <plurals name="pantry_free_slots_left">
+        <item quantity="one">Zostało %1$d miejsce</item>
+        <item quantity="few">Zostały %1$d miejsca</item>
+        <item quantity="many">Zostało %1$d miejsc</item>
+        <item quantity="other">Zostało %1$d miejsca</item>
+    </plurals>
+    <string name="pantry_free_full">Spiżarnia pełna</string>
+    <string name="pantry_go_pro">Przejdź na Pro</string>
+
+    <string name="category_dairy">Nabiał</string>
+    <string name="category_vegetables">Warzywa</string>
+    <string name="category_meat">Mięso</string>
+    <string name="category_fruit">Owoce</string>
+    <string name="category_beverages">Napoje</string>
+    <string name="category_other">Inne</string>
+
+    <string name="scanner_title">Skanuj produkt</string>
+    <string name="scanner_permission_rationale">Aparat jest potrzebny, żeby odczytać kod kreskowy produktu.</string>
+    <string name="scanner_permission_grant">Zezwól na dostęp</string>
+    <string name="scanner_permission_denied">Dostęp do aparatu jest wyłączony. Możesz go włączyć w ustawieniach systemu.</string>
+    <string name="scanner_hint">Skieruj aparat na kod kreskowy</string>
+
+</resources>

@@ -11,11 +11,16 @@ kover {
     reports {
         filters {
             excludes {
+                // Generated compose-resources accessors: a table of string ids, not behaviour.
+                packages("com.appotato.features.pantry.implementation.generated.resources")
                 // Composables, Koin wiring, the system clock and the Room-backed repository. Each
                 // needs a real device, graph or database to exercise; the reducer and the mappers
                 // below them are where the logic actually is.
                 classes(
                     "com.appotato.features.pantry.implementation.PantryScreenKt*",
+                    "com.appotato.features.pantry.implementation.ScannerScreenKt*",
+                    "com.appotato.features.pantry.implementation.AddItemSheetKt*",
+                    "com.appotato.features.pantry.implementation.PantryCardKt*",
                     "com.appotato.features.pantry.implementation.ComposableSingletons*",
                     "com.appotato.features.pantry.implementation.PantryModuleKt*",
                     "com.appotato.features.pantry.implementation.SystemToday",
@@ -26,6 +31,13 @@ kover {
     }
 }
 
+compose.resources {
+    // Generated accessors stay internal — strings are an implementation detail of the feature.
+    publicResClass = false
+    packageOfResClass = "com.appotato.features.pantry.implementation.generated.resources"
+    generateResClass = always
+}
+
 kotlin {
     sourceSets {
         commonMain {
@@ -33,10 +45,12 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
 
+                implementation(compose.components.resources)
                 implementation(projects.shared.uiComponents)
                 implementation(projects.shared.dispatchers)
                 implementation(projects.shared.billing.api)
                 implementation(projects.shared.database)
+                implementation(projects.shared.barcodeScanner)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
 

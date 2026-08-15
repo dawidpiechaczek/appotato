@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f65f67886e1775ed8a23cb5195d2e2f0",
+    "identityHash": "cbd349215ae7fd413d42a59a3689289d",
     "entities": [
       {
         "tableName": "pantry_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `expires_on_epoch_day` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `expires_on_epoch_day` INTEGER NOT NULL, `category` TEXT NOT NULL, `quantity` TEXT NOT NULL, `barcode` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -25,6 +25,23 @@
             "columnName": "expires_on_epoch_day",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quantity",
+            "columnName": "quantity",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "barcode",
+            "columnName": "barcode",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -32,12 +49,23 @@
           "columnNames": [
             "id"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "index_pantry_items_expires_on_epoch_day",
+            "unique": false,
+            "columnNames": [
+              "expires_on_epoch_day"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pantry_items_expires_on_epoch_day` ON `${TABLE_NAME}` (`expires_on_epoch_day`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f65f67886e1775ed8a23cb5195d2e2f0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cbd349215ae7fd413d42a59a3689289d')"
     ]
   }
 }

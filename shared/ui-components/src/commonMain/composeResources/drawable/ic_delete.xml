@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- XML vector drawable, not SVG: compose-resources rejects SVG on Android at runtime. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M9 3h6l1 2h4v2H4V5h4l1 -2zM6 9h12l-1 12H7L6 9zm3 2v8h1.5v-8H9zm4.5 0v8H15v-8h-1.5z" />
+</vector>
