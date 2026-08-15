@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  # A newer push makes the running check obsolete; two Gradle builds on the same tree also clobber
+  # each other's Kotlin/Native output.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The common path: everything that does not need a Mac. Fast, and it is what catches most breaks.
+  check:
+    name: Android, detekt, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          # AndroidLibraryPlugin compiles Kotlin with jvmTarget 23.
+          java-version: '23'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # koverVerify enforces the per-module gates — 100% on the modules that have one. There is no
+      # repo-wide aggregate on purpose: a single number would average tested logic with untestable
+      # Composables and mean nothing.
+      - run: ./gradlew assembleDevDebug detekt koverVerify --no-daemon
+
+  # Kotlin/Native cannot build Apple targets off a Mac, so this is a separate job. Linking the
+  # debug simulator framework pulls in every module's iOS compile without paying for release
+  # linking, which is the slowest step and adds nothing a pull request needs to know.
+  ios:
+    name: iOS framework
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '23'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 --no-daemon
