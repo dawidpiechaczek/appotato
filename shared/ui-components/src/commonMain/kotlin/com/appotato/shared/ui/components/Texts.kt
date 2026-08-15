@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 fun HeaderText(
     modifier: Modifier = Modifier,
     text: String,
-    color: Color = LocalCustomColors.current.primary,
+    color: Color = LocalCustomColors.current.content,
     textAlign: TextAlign? = null,
 ) = Text(
     modifier = modifier,
@@ -28,7 +28,7 @@ fun HeaderText(
 fun SubheaderText(
     modifier: Modifier = Modifier,
     text: String,
-    color: Color = LocalCustomColors.current.primary,
+    color: Color = LocalCustomColors.current.content,
     textAlign: TextAlign? = null,
 ) = Text(
     modifier = modifier,
@@ -42,7 +42,7 @@ fun SubheaderText(
 fun BodyText(
     modifier: Modifier = Modifier,
     text: String,
-    color: Color = LocalCustomColors.current.primary,
+    color: Color = LocalCustomColors.current.content,
     textAlign: TextAlign? = null,
 ) = Text(
     modifier = modifier,
@@ -56,7 +56,7 @@ fun BodyText(
 fun CommentText(
     modifier: Modifier = Modifier,
     text: String,
-    color: Color = LocalCustomColors.current.primary,
+    color: Color = LocalCustomColors.current.content,
     textAlign: TextAlign? = null,
 ) = Text(
     modifier = modifier,

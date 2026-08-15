@@ -19,8 +19,8 @@ fun ElevatedButton(
 ) = ElevatedButton(
     modifier = modifier,
     colors = ButtonDefaults.elevatedButtonColors(
-        contentColor = LocalCustomColors.current.primary,
-        containerColor = LocalCustomColors.current.secondary,
+        contentColor = LocalCustomColors.current.onPrimary,
+        containerColor = LocalCustomColors.current.primary,
     ),
     enabled = enabled,
     onClick = onClick,
@@ -37,9 +37,9 @@ fun OutlinedButton(
     modifier = modifier,
     colors = ButtonDefaults.outlinedButtonColors(
         contentColor = LocalCustomColors.current.primary,
-        containerColor = LocalCustomColors.current.white,
+        containerColor = LocalCustomColors.current.transparent,
     ),
-    border = BorderStroke(width = 2.dp, color = LocalCustomColors.current.primary),
+    border = BorderStroke(width = 1.dp, color = LocalCustomColors.current.outline),
     enabled = enabled,
     onClick = onClick,
     content = content,

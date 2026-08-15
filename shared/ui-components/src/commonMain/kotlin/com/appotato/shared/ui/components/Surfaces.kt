@@ -20,7 +20,7 @@ fun Card(
     content: @Composable () -> Unit
 ) = Card(
     modifier = modifier,
-    colors = CardDefaults.cardColors(containerColor = LocalCustomColors.current.white),
+    colors = CardDefaults.cardColors(containerColor = LocalCustomColors.current.surface),
     elevation = CardDefaults.cardElevation(defaultElevation = LocalCustomElevation.current.small),
     content = { content() },
 )

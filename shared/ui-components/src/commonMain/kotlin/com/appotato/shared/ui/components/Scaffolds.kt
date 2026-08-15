@@ -37,7 +37,7 @@ fun Screen(
     content: @Composable (PaddingValues) -> Unit
 ) = Scaffold(
     modifier = modifier,
-    containerColor = LocalCustomColors.current.white,
+    containerColor = LocalCustomColors.current.background,
     topBar = { header?.invoke() },
     bottomBar = { bottomBar?.invoke() },
     content = content,
@@ -84,7 +84,7 @@ fun CircularAction(
             modifier = Modifier.size(ActionIconSize),
             icon = icon,
             contentDescription = contentDescription,
-            tint = LocalCustomColors.current.white,
+            tint = LocalCustomColors.current.onPrimary,
         )
     }
 }
@@ -95,7 +95,7 @@ fun BottomBar(
     content: @Composable RowScope.() -> Unit
 ) = NavigationBar(
     modifier = modifier,
-    containerColor = LocalCustomColors.current.white,
+    containerColor = LocalCustomColors.current.surface,
     content = content,
 )
 
@@ -111,10 +111,10 @@ fun RowScope.BottomBarItem(
     icon = { Icon(icon = icon, contentDescription = null) },
     label = { CommentText(text = label) },
     colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = LocalCustomColors.current.primary,
+        selectedIconColor = LocalCustomColors.current.onPrimaryContainer,
         selectedTextColor = LocalCustomColors.current.primary,
         unselectedIconColor = LocalCustomColors.current.muted,
         unselectedTextColor = LocalCustomColors.current.muted,
-        indicatorColor = LocalCustomColors.current.secondary,
+        indicatorColor = LocalCustomColors.current.primaryContainer,
     ),
 )

@@ -35,6 +35,34 @@ depend as `implementation(projects.shared.serialization.api)`, `projects.shared.
 `PantryEffect.PaywallRequested`. There is no navigation library — one destination does not justify
 guessing at one.
 
+## Colour
+
+`AppotatoColors` (`shared/ui-components/AppotatoColors.kt`) names every colour by **role**, never by
+appearance — that is what makes two palettes possible at all: `white` cannot be dark, a `surface`
+can. `AppotatoTheme` picks `LightColors` or `DarkColors` from `isSystemInDarkTheme()` and also
+builds a material3 `ColorScheme` from them, because `ModalBottomSheet`, `NavigationBar`,
+`TextField` and `Surface` read their scrims, ripples and internal fills from `MaterialTheme` rather
+than from our wrappers.
+
+One hue family throughout: **slate** for structure, **sky** for the brand, so `primary` and
+`primaryContainer` read as two weights of one colour instead of two competing ones.
+
+| role | light | dark |
+|---|---|---|
+| `background` / `surface` | `F8FAFC` / `FFFFFF` | `0F172A` / `1E293B` |
+| `primary` / `onPrimary` | `0369A1` / `FFFFFF` | `38BDF8` / `0F172A` |
+| `primaryContainer` / `onPrimaryContainer` | `E0F2FE` / `0369A1` | `0C4A6E` / `7DD3FC` |
+| `content` / `muted` | `0F172A` / `64748B` | `F1F5F9` / `94A3B8` |
+| `danger` / `caution` / `success` | `DC2626` / `B45309` / `047857` | `F87171` / `FBBF24` / `34D399` |
+
+Status colours differ per mode on purpose: the same hue needs more weight on white than on slate.
+Every text role clears **WCAG AA (4.5:1)** against the surface it sits on — check any change with
+the ratio formula before committing it. `onPrimaryContainer` exists solely because `primary` on its
+own container is 4.42:1 in dark mode, just under the line.
+
+`onOverlay` is fixed white in both palettes: it labels content over the camera feed, where there is
+no themed surface underneath.
+
 ## Layering rules
 
 - `shared/*` = cross-cutting capabilities consumed by many features. No feature logic there.

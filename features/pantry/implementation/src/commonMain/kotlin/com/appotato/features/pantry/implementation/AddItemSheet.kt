@@ -50,7 +50,7 @@ internal fun AddItemSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(),
-        containerColor = AppotatoTheme.colors.white,
+        containerColor = AppotatoTheme.colors.surface,
     ) {
         Column(
             modifier = Modifier

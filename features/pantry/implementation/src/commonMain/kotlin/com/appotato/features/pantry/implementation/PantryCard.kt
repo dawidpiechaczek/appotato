@@ -23,13 +23,16 @@ import com.appotato.shared.ui.components.Badge
 import com.appotato.shared.ui.components.BodyText
 import com.appotato.shared.ui.components.Card
 import com.appotato.shared.ui.components.CommentText
+import com.appotato.shared.ui.components.EmojiIcon
 import com.appotato.shared.ui.components.Icon
 import com.appotato.shared.ui.components.TextButton
 import org.jetbrains.compose.resources.stringResource
 
 private val CardPadding = 12.dp
 private val ItemSpacing = 8.dp
-private val CategoryIconSize = 32.dp
+// Tall enough to be the row's height driver: the two text lines next to it come to a little
+// less, so the icon plus the card padding is what sets how tall an item is.
+private val CategoryIconSize = 40.dp
 private val DeleteIconSize = 20.dp
 
 @Composable
@@ -40,7 +43,7 @@ internal fun PantryCard(entry: PantryEntry, onDelete: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(ItemSpacing),
         ) {
-            BodyText(modifier = Modifier.size(CategoryIconSize), text = entry.item.category.icon)
+            EmojiIcon(emoji = entry.item.category.icon, size = CategoryIconSize)
             Column(modifier = Modifier.weight(weight = 1f)) {
                 BodyText(text = entry.item.name)
                 CommentText(text = entry.meta(), color = AppotatoTheme.colors.muted)

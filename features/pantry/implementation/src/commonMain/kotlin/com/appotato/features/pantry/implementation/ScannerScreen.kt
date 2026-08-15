@@ -70,7 +70,7 @@ private fun CameraPane(onBarcodeScanned: (String) -> Unit) {
         CommentText(
             modifier = Modifier.fillMaxWidth().padding(ScannerPadding),
             text = stringResource(Res.string.scanner_hint),
-            color = AppotatoTheme.colors.white,
+            color = AppotatoTheme.colors.onOverlay,
             textAlign = TextAlign.Center,
         )
     }

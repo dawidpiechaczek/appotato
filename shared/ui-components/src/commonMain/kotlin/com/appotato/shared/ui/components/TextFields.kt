@@ -17,8 +17,15 @@ fun TextField(
 ) = TextField(
     modifier = modifier,
     colors = TextFieldDefaults.colors(
-        focusedTextColor = LocalCustomColors.current.primary,
+        focusedTextColor = LocalCustomColors.current.content,
+        unfocusedTextColor = LocalCustomColors.current.content,
         focusedLabelColor = LocalCustomColors.current.primary,
+        unfocusedLabelColor = LocalCustomColors.current.muted,
+        focusedIndicatorColor = LocalCustomColors.current.primary,
+        unfocusedIndicatorColor = LocalCustomColors.current.outline,
+        focusedContainerColor = LocalCustomColors.current.surface,
+        unfocusedContainerColor = LocalCustomColors.current.surface,
+        cursorColor = LocalCustomColors.current.primary,
     ),
     label = label,
     value = value,
@@ -36,8 +43,13 @@ fun OutlinedTextField(
 ) = OutlinedTextField(
     modifier = modifier,
     colors = OutlinedTextFieldDefaults.colors(
-        focusedTextColor = LocalCustomColors.current.primary,
+        focusedTextColor = LocalCustomColors.current.content,
+        unfocusedTextColor = LocalCustomColors.current.content,
         focusedLabelColor = LocalCustomColors.current.primary,
+        unfocusedLabelColor = LocalCustomColors.current.muted,
+        focusedBorderColor = LocalCustomColors.current.primary,
+        unfocusedBorderColor = LocalCustomColors.current.outline,
+        cursorColor = LocalCustomColors.current.primary,
     ),
     label = label,
     value = value,

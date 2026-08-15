@@ -1,29 +1,19 @@
 package com.appotato.shared.ui.components
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-@Immutable
-data class AppotatoColors(
-    val primary: Color,
-    val secondary: Color,
-    val background: List<Color>,
-    val transparent: Color,
-    val white: Color,
-    val warning: Color,
-    val info: Color,
-    val danger: Color,
-    val caution: Color,
-    val success: Color,
-    val muted: Color,
-)
 
 @Immutable
 data class AppotatoTypography(
@@ -40,21 +30,8 @@ data class AppotatoElevation(
     val large: Dp,
 )
 
-internal val LocalCustomColors = staticCompositionLocalOf {
-    AppotatoColors(
-        primary = Color.Unspecified,
-        secondary = Color.Unspecified,
-        background = emptyList(),
-        transparent = Color.Unspecified,
-        white = Color.Unspecified,
-        warning = Color.Unspecified,
-        info = Color.Unspecified,
-        danger = Color.Unspecified,
-        caution = Color.Unspecified,
-        success = Color.Unspecified,
-        muted = Color.Unspecified,
-    )
-}
+internal val LocalCustomColors = staticCompositionLocalOf { LightColors }
+
 internal val LocalCustomTypography = staticCompositionLocalOf {
     AppotatoTypography(
         header = TextStyle.Default,
@@ -73,41 +50,65 @@ internal val LocalCustomElevation = staticCompositionLocalOf {
 
 @Composable
 fun AppotatoTheme(
+    isDark: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val customColors = AppotatoColors(
-        primary = Color.Blue,
-        secondary = Color.Green,
-        background = listOf(Color.White, Color(color = 0xFFF8BBD0)),
-        transparent = Color.Transparent,
-        white = Color.White,
-        warning = Color.Red,
-        info = Color.Yellow,
-        danger = Color(color = 0xFFEF4444),
-        caution = Color(color = 0xFFF59E0B),
-        success = Color(color = 0xFF10B981),
-        muted = Color(color = 0xFF6B7280),
+    val colors = if (isDark) DarkColors else LightColors
+    val typography = AppotatoTypography(
+        header = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+        subheader = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
+        body = TextStyle(fontSize = 15.sp),
+        comment = TextStyle(fontSize = 13.sp),
     )
-    val customTypography = AppotatoTypography(
-        header = TextStyle(fontSize = 32.sp),
-        subheader = TextStyle(fontSize = 24.sp),
-        body = TextStyle(fontSize = 16.sp),
-        comment = TextStyle(fontSize = 12.sp),
-    )
-    val customElevation = AppotatoElevation(
-        small = 2.dp,
-        medium = 4.dp,
+    val elevation = AppotatoElevation(
+        small = 1.dp,
+        medium = 3.dp,
         large = 8.dp
     )
+
     CompositionLocalProvider(
-        LocalCustomColors provides customColors,
-        LocalCustomTypography provides customTypography,
-        LocalCustomElevation provides customElevation,
-        content = content,
+        LocalCustomColors provides colors,
+        LocalCustomTypography provides typography,
+        LocalCustomElevation provides elevation,
+    ) {
+        // material3 components the app builds on — ModalBottomSheet, NavigationBar, TextField,
+        // Surface — read their scrims, ripples and internal fills from MaterialTheme, not from the
+        // wrappers. Without this the sheet scrim and text-field internals stay light in dark mode.
+        MaterialTheme(
+            colorScheme = colors.toColorScheme(isDark),
+            content = content,
+        )
+    }
+}
+
+private fun AppotatoColors.toColorScheme(isDark: Boolean): ColorScheme {
+    val base = if (isDark) darkColorScheme() else lightColorScheme()
+    return base.copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryContainer,
+        onPrimaryContainer = onPrimaryContainer,
+        secondary = primary,
+        onSecondary = onPrimary,
+        secondaryContainer = primaryContainer,
+        onSecondaryContainer = onPrimaryContainer,
+        background = background,
+        onBackground = content,
+        surface = surface,
+        onSurface = content,
+        surfaceVariant = primaryContainer,
+        onSurfaceVariant = muted,
+        surfaceContainer = surface,
+        surfaceContainerLow = surface,
+        surfaceContainerHigh = surface,
+        outline = outline,
+        outlineVariant = outline,
+        error = danger,
+        onError = onPrimary,
     )
 }
 
-// Use with eg. CustomTheme.elevation.small
+// Use with eg. AppotatoTheme.elevation.small
 object AppotatoTheme {
     val colors: AppotatoColors
         @Composable

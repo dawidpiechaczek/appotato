@@ -25,11 +25,15 @@ fun Chip(
     modifier = modifier,
     onClick = onClick,
     shape = ChipShape,
-    color = if (isSelected) LocalCustomColors.current.primary else LocalCustomColors.current.secondary,
+    color = if (isSelected) LocalCustomColors.current.primary else LocalCustomColors.current.primaryContainer,
 ) {
     CommentText(
         modifier = Modifier.padding(ChipPadding),
         text = text,
-        color = if (isSelected) LocalCustomColors.current.white else LocalCustomColors.current.primary,
+        color = if (isSelected) {
+            LocalCustomColors.current.onPrimary
+        } else {
+            LocalCustomColors.current.onPrimaryContainer
+        },
     )
 }
