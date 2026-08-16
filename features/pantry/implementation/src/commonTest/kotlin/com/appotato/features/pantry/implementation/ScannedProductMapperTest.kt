@@ -37,7 +37,8 @@ class ScannedProductMapperTest {
                 quantity = "1 l",
                 caloriesPer100g = 42,
                 imageUrl = null,
-                category = null
+                category = null,
+                ingredientCode = null
             ),
             scanned
         )
@@ -85,6 +86,21 @@ class ScannedProductMapperTest {
     @Test
     fun `Given a record with no tags at all When it is mapped Then it does not guess`() {
         assertNull(categoryOf())
+    }
+
+    @Test
+    fun `Given tags naming a specific food When it is mapped Then the ingredient comes with it`() {
+        val scanned = product(tags = listOf("en:dairies", "en:milks")).toScannedProduct()
+
+        assertEquals("milk", scanned.ingredientCode)
+    }
+
+    @Test
+    fun `Given tags too general to name a food When it is mapped Then the ingredient is null`() {
+        // The category is still worth guessing from these; the specific ingredient is not.
+        val scanned = product(tags = listOf("en:dairies")).toScannedProduct()
+
+        assertNull(scanned.ingredientCode)
     }
 
     @Test

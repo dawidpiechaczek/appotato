@@ -29,7 +29,8 @@ class PantryStateTest {
         quantity = "1 l",
         caloriesPer100g = 61,
         imageUrl = MILK_PHOTO,
-        category = ProductCategory.Dairy
+        category = ProductCategory.Dairy,
+        ingredientCode = "milk"
     )
 
     @Test
@@ -107,6 +108,14 @@ class PantryStateTest {
         assertEquals("70", prefilled.newItemCalories)
         // The category is the one field with no empty value to test against, so the guess wins.
         assertEquals(ProductCategory.Dairy, prefilled.newItemCategory)
+        assertEquals("milk", prefilled.newItemIngredientCode)
+    }
+
+    @Test
+    fun `Given a form filled in by a scan When the scan is cleared Then the ingredient goes too`() {
+        val cleared = PantryState().prefilledWith(scannedMilk).withScanCleared()
+
+        assertNull(cleared.newItemIngredientCode)
     }
 
     @Test
@@ -117,7 +126,8 @@ class PantryStateTest {
             quantity = null,
             caloriesPer100g = null,
             imageUrl = null,
-            category = null
+            category = null,
+            ingredientCode = null
         )
 
         val prefilled = PantryState(newItemCategory = ProductCategory.Meat).prefilledWith(empty)

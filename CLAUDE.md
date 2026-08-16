@@ -24,6 +24,7 @@ shared/
   app-update/{api,implementation,fake}  AppUpdateChecker — version gate on top of remote-config
   billing/{api,implementation,fake}     Billing — subscriptions and entitlements; impl is a no-op stub
   product-lookup/{api,implementation,fake}  ProductLookup — barcode → product, Open Food Facts-backed
+  ingredients/              name or OFF tags → a stable ingredient code; pure functions, no DI
 features/                   one submodule per screen or per flow
   login/{api,implementation}            no sources yet, module shell only
   pantry/implementation                 main screen: item list, add/delete, scanner tab, free-tier gate
@@ -187,10 +188,10 @@ history. A feature that owned its own would hand the next feature a second `.db`
 - **The database is at version 2** and migrates rather than recreating: the pantry is the only copy
   of the user's data. Every migration is listed in `Migrations.kt`, in
   `Builder.addAppotatoMigrations()` — an extension rather than a `vararg` array because detekt
-  rejects the spread operator. v2 adds `calories_per_100g INTEGER` and `image_url TEXT`, both
-  nullable with no default, so rows that predate the scanner read as "unknown" rather than as a
-  zero-calorie food with a broken image. After a schema change, run the build once and **commit the
-  generated `schemas/…/N.json`** alongside the migration.
+  rejects the spread operator. v2 adds `calories_per_100g INTEGER`, `image_url TEXT` and
+  `ingredient_code TEXT`, all nullable with no default, so rows that predate the scanner read as
+  "unknown" rather than as a zero-calorie food with a broken image and no ingredient. After a schema
+  change, run the build once and **commit the generated `schemas/…/N.json`** alongside the migration.
 - **Until the app is in a store, fold a new column into the version being worked on** rather than
   adding another one — there is no installed build to stay compatible with, and a migration per
   afternoon is history that protects nobody. Delete the stale `schemas/…/N.json` so Room re-exports

@@ -7,6 +7,7 @@ import com.appotato.shared.billing.api.Entitlement
 import com.appotato.features.pantry.implementation.data.toScannedProduct
 import com.appotato.shared.billing.api.hasAccessTo
 import com.appotato.shared.dispatchers.CoroutineDispatchers
+import com.appotato.shared.ingredients.ingredientFromName
 import com.appotato.shared.product.lookup.api.ProductLookup
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -167,7 +168,11 @@ internal class PantryViewModel(
         quantity = _state.value.newItemQuantity.trim(),
         barcode = _state.value.newItemBarcode,
         caloriesPer100g = _state.value.newItemCaloriesOrNull,
-        imageUrl = _state.value.newItemImageUrl
+        imageUrl = _state.value.newItemImageUrl,
+        // The scan's tags first, the name only as a fallback: tags are a machine vocabulary, while
+        // the name is whatever the user settled on. Resolved here rather than as the user types, so
+        // an edit made after the lookup landed is still the one that counts.
+        ingredientCode = _state.value.newItemIngredientCode ?: ingredientFromName(name)
     )
 
     private fun launchOnIo(block: suspend () -> Unit) = viewModelScope.launch(dispatchers.io) { block() }

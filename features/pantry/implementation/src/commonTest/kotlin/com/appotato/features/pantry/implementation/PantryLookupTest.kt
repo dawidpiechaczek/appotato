@@ -279,6 +279,24 @@ class PantryLookupTest {
     }
 
     @Test
+    fun `Given a scan and a renamed item When it is saved Then the scan's ingredient still wins`() =
+        runTest(dispatcher) {
+            fakeLookup.result = Result.success(milk())
+            val pantry = pantry()
+            advanceUntilIdle()
+
+            ScannerViewModel(pendingScan).onBarcodeScanned(BARCODE)
+            advanceUntilIdle()
+            // The user renames it to something the name matcher would read as cheese. The barcode
+            // says what is in the carton, and the barcode is the better witness.
+            pantry.onIntent(PantryIntent.NameChanged("Serek do lodówki"))
+            pantry.onIntent(PantryIntent.AddClicked)
+            advanceUntilIdle()
+
+            assertEquals("milk", repository.current.single().ingredientCode)
+        }
+
+    @Test
     fun `Given a scan the user backs out of When the sheet is dismissed Then the code is dropped`() =
         runTest(dispatcher) {
             fakeLookup.result = Result.success(milk())

@@ -13,7 +13,8 @@ internal fun PantryItemEntity.toDomain(): PantryItem = PantryItem(
     quantity = quantity,
     barcode = barcode,
     caloriesPer100g = caloriesPer100g,
-    imageUrl = imageUrl
+    imageUrl = imageUrl,
+    ingredientCode = ingredientCode
 )
 
 internal fun PantryItem.toEntity(): PantryItemEntity = PantryItemEntity(
@@ -24,5 +25,6 @@ internal fun PantryItem.toEntity(): PantryItemEntity = PantryItemEntity(
     quantity = quantity,
     barcode = barcode,
     caloriesPer100g = caloriesPer100g,
-    imageUrl = imageUrl
+    imageUrl = imageUrl,
+    ingredientCode = ingredientCode
 )

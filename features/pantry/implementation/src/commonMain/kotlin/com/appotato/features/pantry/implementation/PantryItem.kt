@@ -19,5 +19,12 @@ internal data class PantryItem(
     /** Unknown for anything added by hand: it is filled in from a product database after a scan. */
     val caloriesPer100g: Int? = null,
     /** A photo of the packaging, when the scan found one. The card falls back to the emoji. */
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    /**
+     * What food this actually is, stripped of brand, language and pack size — `milk` for a jug of
+     * *Mleko UHT 3,2%* and for a carton of *Vollmilch* alike. Null when nothing could be resolved,
+     * which is ordinary: it is what lets two spellings of one food share a recipe suggestion, and
+     * nothing else depends on it.
+     */
+    val ingredientCode: String? = null
 )

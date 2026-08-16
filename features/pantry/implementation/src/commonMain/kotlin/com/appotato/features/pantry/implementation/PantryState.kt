@@ -33,6 +33,11 @@ internal data class PantryState(
     val newItemBarcode: String? = null,
     /** The photo the lookup found, if any. Not editable — there is no field to type a URL into. */
     val newItemImageUrl: String? = null,
+    /**
+     * What the scan's tags resolved to, held until the item is saved. Null for a hand-typed item,
+     * and for a scan whose tags matched nothing — either way the name is read instead at save time.
+     */
+    val newItemIngredientCode: String? = null,
     val lookup: LookupStatus = LookupStatus.Idle,
     val isPro: Boolean = false
 ) {
@@ -79,7 +84,9 @@ internal fun PantryState.prefilledWith(product: ScannedProduct): PantryState = c
     newItemQuantity = newItemQuantity.ifBlank { product.quantity.orEmpty() },
     newItemCalories = newItemCalories.ifBlank { product.caloriesPer100g?.toString().orEmpty() },
     newItemImageUrl = product.imageUrl,
-    newItemCategory = product.category ?: newItemCategory
+    newItemCategory = product.category ?: newItemCategory,
+    // Not user-editable either, so nothing of theirs is at risk of being overwritten.
+    newItemIngredientCode = product.ingredientCode
 )
 
 /** Everything the scan put in the form, undone. The category and shelf life are the user's. */
@@ -87,5 +94,6 @@ internal fun PantryState.withScanCleared(): PantryState = copy(
     newItemBarcode = null,
     newItemCalories = "",
     newItemImageUrl = null,
+    newItemIngredientCode = null,
     lookup = LookupStatus.Idle
 )

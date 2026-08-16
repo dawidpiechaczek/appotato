@@ -2,6 +2,7 @@ package com.appotato.features.pantry.implementation.data
 
 import com.appotato.features.pantry.implementation.ProductCategory
 import com.appotato.features.pantry.implementation.ScannedProduct
+import com.appotato.shared.ingredients.ingredientFromTags
 import com.appotato.shared.product.lookup.api.Product
 
 internal fun Product.toScannedProduct(): ScannedProduct = ScannedProduct(
@@ -12,7 +13,10 @@ internal fun Product.toScannedProduct(): ScannedProduct = ScannedProduct(
     // cannot check, and the two would be indistinguishable once stored in one column.
     caloriesPer100g = nutrition?.caloriesPer100g,
     imageUrl = imageUrl,
-    category = categoryFor(categoryTags)
+    category = categoryFor(categoryTags),
+    // The same tags, read at a different resolution: six categories for the picker, a specific food
+    // for the recipe suggestions. Both admit defeat separately — one can miss while the other hits.
+    ingredientCode = ingredientFromTags(categoryTags)
 )
 
 /**

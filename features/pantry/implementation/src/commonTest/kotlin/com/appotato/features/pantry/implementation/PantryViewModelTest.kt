@@ -141,6 +141,32 @@ class PantryViewModelTest {
     }
 
     @Test
+    fun `Given a hand-typed name When the item is added Then the ingredient is read off it`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onIntent(PantryIntent.NameChanged("Ser żółty Gouda"))
+            viewModel.onIntent(PantryIntent.AddClicked)
+            advanceUntilIdle()
+
+            assertEquals("cheese", repository.current.single().ingredientCode)
+        }
+
+    @Test
+    fun `Given a name naming no known food When the item is added Then no ingredient is invented`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onIntent(PantryIntent.NameChanged("Zestaw upominkowy"))
+            viewModel.onIntent(PantryIntent.AddClicked)
+            advanceUntilIdle()
+
+            assertNull(repository.current.single().ingredientCode)
+        }
+
+    @Test
     fun `Given a name of only spaces When add is clicked Then nothing is stored`() = runTest(dispatcher) {
         val viewModel = viewModel()
         advanceUntilIdle()

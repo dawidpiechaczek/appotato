@@ -17,7 +17,8 @@ class PantryItemMapperTest {
         quantity = "1 l",
         barcode = "5901234123457",
         caloriesPer100g = 42,
-        imageUrl = "https://images.openfoodfacts.org/front.200.jpg"
+        imageUrl = "https://images.openfoodfacts.org/front.200.jpg",
+        ingredientCode = "milk"
     )
 
     @Test
@@ -32,6 +33,7 @@ class PantryItemMapperTest {
         assertEquals("5901234123457", entity.barcode)
         assertEquals(42, entity.caloriesPer100g)
         assertEquals("https://images.openfoodfacts.org/front.200.jpg", entity.imageUrl)
+        assertEquals("milk", entity.ingredientCode)
     }
 
     @Test

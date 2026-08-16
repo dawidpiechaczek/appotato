@@ -44,5 +44,16 @@ public data class PantryItemEntity(
      * cache is the layer that should decide what is worth keeping on disk.
      */
     @ColumnInfo(name = "image_url")
-    public val imageUrl: String? = null
+    public val imageUrl: String? = null,
+    /**
+     * A stable, language-neutral name for the food itself, resolved from the scan's tags or from
+     * [name] — `milk`, never `Mleko UHT 3,2%`. Null whenever nothing could be resolved, which is an
+     * ordinary outcome and not an error: the row is still perfectly usable, it just cannot be
+     * grouped with the same food bought under a different brand or entered in another language.
+     *
+     * Opaque here on purpose, exactly like [category]: this module stores it and holds no opinion
+     * about what any particular value means.
+     */
+    @ColumnInfo(name = "ingredient_code")
+    public val ingredientCode: String? = null
 )

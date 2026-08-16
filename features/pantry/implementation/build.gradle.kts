@@ -50,6 +50,7 @@ kotlin {
                 implementation(projects.shared.dispatchers)
                 implementation(projects.shared.billing.api)
                 implementation(projects.shared.productLookup.api)
+                implementation(projects.shared.ingredients)
                 implementation(projects.shared.database)
                 implementation(projects.shared.barcodeScanner)
                 implementation(libs.kotlinx.coroutines.core)
