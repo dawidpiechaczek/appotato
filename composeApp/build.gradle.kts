@@ -56,8 +56,15 @@ kotlin {
 
             implementation(projects.shared.dispatchers)
             implementation(projects.shared.database)
+            implementation(projects.shared.network)
+            // Only to hand Coil the HttpClient above and place its cache; the image Composables
+            // live in ui-components.
+            implementation(libs.coil)
+            implementation(libs.coil.network)
+            implementation(libs.okio)
             implementation(projects.shared.billing.api)
             implementation(projects.shared.billing.implementation)
+            implementation(projects.shared.productLookup.implementation)
             implementation(projects.features.paywall.implementation)
             implementation(projects.features.recipes.implementation)
             implementation(projects.features.pantry.implementation)

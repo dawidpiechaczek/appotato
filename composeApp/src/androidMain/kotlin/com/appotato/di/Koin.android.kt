@@ -13,6 +13,6 @@ fun setupKoin(application: Application): KoinApplication = startKoin {
     androidLogger()
     androidContext(application)
     modules(appModules())
-}
+}.also { koin -> koin.setupImageLoader() }
 
 internal actual fun platformModules(): List<Module> = listOf(telemetryModule(), remoteConfigModule())

@@ -15,5 +15,9 @@ internal data class PantryItem(
     val expiresOn: LocalDate,
     val category: ProductCategory = ProductCategory.Other,
     val quantity: String = "",
-    val barcode: String? = null
+    val barcode: String? = null,
+    /** Unknown for anything added by hand: it is filled in from a product database after a scan. */
+    val caloriesPer100g: Int? = null,
+    /** A photo of the packaging, when the scan found one. The card falls back to the emoji. */
+    val imageUrl: String? = null
 )

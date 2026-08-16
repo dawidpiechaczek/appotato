@@ -2,6 +2,7 @@ package com.appotato.features.pantry.implementation
 
 import com.appotato.shared.billing.fake.BillingFake
 import com.appotato.shared.dispatchers.CoroutineDispatchers
+import com.appotato.shared.product.lookup.fake.ProductLookupFake
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -33,6 +34,7 @@ class PantryScanHandoffTest {
     private val billing = BillingFake()
     private val repository = PantryRepositoryFake()
     private val pendingScan = PendingScan()
+    private val productLookup = ProductLookupFake()
 
     @BeforeTest
     fun setUp() {
@@ -44,7 +46,7 @@ class PantryScanHandoffTest {
         Dispatchers.resetMain()
     }
 
-    private fun pantry() = PantryViewModel(repository, billing, pendingScan, { today }, dispatchers)
+    private fun pantry() = PantryViewModel(repository, billing, pendingScan, productLookup, { today }, dispatchers)
 
     private fun scanner() = ScannerViewModel(pendingScan)
 

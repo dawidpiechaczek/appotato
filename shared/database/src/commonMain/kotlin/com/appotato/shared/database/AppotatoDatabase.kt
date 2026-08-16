@@ -13,7 +13,7 @@ import androidx.room.RoomDatabaseConstructor
  * the next feature a second one. The rows here are storage records; what they *mean* belongs to the
  * feature that maps them, so no rule about food or expiry lives in this module.
  */
-@Database(entities = [PantryItemEntity::class], version = 1)
+@Database(entities = [PantryItemEntity::class], version = 2)
 @ConstructedBy(AppotatoDatabaseConstructor::class)
 public abstract class AppotatoDatabase : RoomDatabase() {
     public abstract fun pantryItemDao(): PantryItemDao

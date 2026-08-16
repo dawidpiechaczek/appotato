@@ -17,14 +17,18 @@ shared/
   serialization/{api,implementation,fake}
   storage/{api,implementation}          KeyValueStorage — impl is TODO stub, nothing consumes it
   database/                 Room KMP: AppotatoDatabase, entities, DAOs, databaseModule()
+  network/                  the app's one Ktor HttpClient — engines per platform, networkModule()
+  barcode-scanner/          BarcodeScannerView + camera permission, expect/actual per platform
   telemetry/{api,implementation,fake}   Telemetry — analytics + crash reporting, Firebase-backed
   remote-config/{api,implementation,fake}  RemoteConfig — server-controlled values, Firebase-backed
   app-update/{api,implementation,fake}  AppUpdateChecker — version gate on top of remote-config
   billing/{api,implementation,fake}     Billing — subscriptions and entitlements; impl is a no-op stub
+  product-lookup/{api,implementation,fake}  ProductLookup — barcode → product, Open Food Facts-backed
 features/                   one submodule per screen or per flow
   login/{api,implementation}            no sources yet, module shell only
-  pantry/implementation                 main screen: item list, add/delete, free-tier gate
+  pantry/implementation                 main screen: item list, add/delete, scanner tab, free-tier gate
   paywall/implementation                Pro subscription screen
+  recipes/implementation                placeholder tab, no ViewModel yet
 ```
 
 Every module is registered in `settings.gradle.kts`. Typesafe project accessors are on:
@@ -180,6 +184,21 @@ history. A feature that owned its own would hand the next feature a second `.db`
   "expires within N days" stay SQL rather than a filter over the whole table.
 - Schemas are exported to `shared/database/schemas` — commit them, they are the input to migration
   tests.
+- **The database is at version 2** and migrates rather than recreating: the pantry is the only copy
+  of the user's data. Every migration is listed in `Migrations.kt`, in
+  `Builder.addAppotatoMigrations()` — an extension rather than a `vararg` array because detekt
+  rejects the spread operator. v2 adds `calories_per_100g INTEGER` and `image_url TEXT`, both
+  nullable with no default, so rows that predate the scanner read as "unknown" rather than as a
+  zero-calorie food with a broken image. After a schema change, run the build once and **commit the
+  generated `schemas/…/N.json`** alongside the migration.
+- **Until the app is in a store, fold a new column into the version being worked on** rather than
+  adding another one — there is no installed build to stay compatible with, and a migration per
+  afternoon is history that protects nobody. Delete the stale `schemas/…/N.json` so Room re-exports
+  it. This stops at the first store release: after that every shipped version needs its own step,
+  because some device is sitting on it. Note that collapsing a version **downgrades** any dev
+  install that already ran the higher one, and Room refuses to open it — reinstall or clear the
+  app's data. `allowDestructiveMigrationOnDowngrade` would paper over that and is not worth having
+  in the release build for it.
 - Entities live in `shared/` even when they describe one feature's data, because `@Database` has to
   list them. The layering rule is held at the **repository** instead: `:shared:database` contains
   rows and no meaning, and the feature maps them onto its own domain model.
@@ -203,6 +222,100 @@ implementation module.
 - `:shared:billing:implementation` currently binds `NoOpBilling` — everyone is on the free tier and
   every purchase fails with `Unavailable`. That file is the only place a billing vendor may be
   named; swapping it is the whole integration.
+
+## HTTP (Ktor)
+
+One client for the whole app, in `:shared:network`. Ktor 3.3.1, `networkModule()` binds it as a
+`single` — an engine owns a connection pool, and one per caller opens a fresh set of sockets per
+request. It is never closed; its lifetime is the process.
+
+- The **engine** is the only per-platform part: `httpClientEngine()` is expect/actual — OkHttp on
+  Android, Darwin (`NSURLSession`) on iOS. Everything above it is configured once so a second API
+  client cannot quietly get different behaviour.
+- `appotatoHttpClient(engine, maxRetries)` is `public` so tests hand in `MockEngine` and exercise the
+  shipping configuration; a test that builds its own client proves nothing about the one that ships.
+  Tests pass `maxRetries = 0` — the production backoff is seconds of real time.
+- `expectSuccess = false` on purpose: a 404 comes back as a response to inspect, because "no such
+  product" is an answer rather than a failure.
+- `ignoreUnknownKeys = true` is not optional. Responses are third-party documents that gain fields
+  without notice.
+- A `UserAgent` is always sent. Public APIs commonly throttle or reject callers that do not identify
+  themselves.
+- Android already has `INTERNET` in `composeApp/src/androidMain/AndroidManifest.xml`. iOS needs
+  nothing: the Darwin engine is a Kotlin dependency and links into the `ComposeApp` framework, so
+  **no SPM product and no Xcode change** — unlike Firebase.
+- **Coil uses this same client.** `coil-network-ktor3` auto-registers a fetcher the moment it is on
+  the classpath, and that one calls `HttpClient()` — a second engine and pool with none of the
+  configuration above. `KoinApplication.setupImageLoader()` (`composeApp/di/ImageLoader.kt`) hands it
+  ours; both `setupKoin` functions call it. Remove that and image loading silently diverges.
+
+### Image caching
+
+Coil's memory and disk caches are both on — the disk one is what makes a saved item keep its photo
+offline, because `DefaultCacheStrategy.read` returns the cached response **without going to the
+network at all**. (Which is also why the source's images sending no `Cache-Control` costs nothing.)
+
+`setupImageLoader` overrides two of Coil's defaults and nothing else:
+
+- **The directory.** Coil defaults to `SYSTEM_TEMPORARY_DIRECTORY` — `tmp` on iOS, which the system
+  may empty between launches, defeating the point. `imageCacheDirectory()` is expect/actual:
+  `cacheDir` on Android, `Library/Caches` on iOS, both purgeable and excluded from backups.
+- **The ceiling.** 2% of free space, capped at 64 MB rather than Coil's 250 MB. It is a ceiling, not
+  a reservation — the cache only holds photos already shown, and those are ~10 kB thumbnails, so a
+  realistic pantry uses a fraction of a megabyte.
+
+On Android an offline request fails fast with `504 Unsatisfiable Request` instead of timing out,
+because Coil's `ConnectivityChecker` reads `ACCESS_NETWORK_STATE` (already in the manifest). There is
+no such check on iOS — the request goes out and fails normally. Either way the card falls back to the
+category emoji.
+
+## Product lookup (Open Food Facts)
+
+`ProductLookup` (`:shared:product-lookup:api`) is one function: `byBarcode(String): Result<Product?>`.
+The three outcomes are deliberately distinct — a `Product`, a `null` success (barcode not catalogued,
+which is ordinary for own-brand and local items), and a failure (the question could not be asked).
+
+- Open Food Facts is named **only** in `OpenFoodFactsProductLookup`. Swapping the source is a new
+  `ProductLookup` and one line of `productLookupModule()`.
+- **No API key.** Reads need nothing but a `User-Agent`, which is why a client-side call is viable
+  with no backend to proxy through. The published limits are **15 req/min/IP for product reads** and
+  10 req/min/IP for search — per IP, so a shared NAT counts against it. One scan is one request, and
+  a 429 is not retried (the retry policy covers 5xx and dropped connections only). Their documented
+  UA format is `AppName/Version (ContactEmail)`; ours is in `:shared:network`.
+- `GET /api/v2/product/{barcode}.json?fields=…` — the `fields` list is required in practice: the full
+  record is ~100 kB of ingredient analysis and translations for a screen showing a name and a calorie
+  count.
+- Non-numeric input never reaches the network. The scanner will happily return the contents of a QR
+  code, and that is not an EAN.
+- Calories are `energy-kcal_100g`, and they arrive as `Double` (539 comes back as `539.0`) — an `Int`
+  DTO field fails to parse the first time a value has a decimal point. Per 100 g only: a per-serving
+  figure without the serving beside it is a number the user cannot check.
+- The **photo** is `image_small_url` (~200 px, ~10 kB) with `image_url` (~400 px) as the fallback,
+  because a list thumbnail is where it gets shown. The URL is stored, not the bytes — these URLs are
+  revision-stamped and stay valid, and the image cache is what should decide what stays on disk.
+  `PantryCard` falls back to the category emoji when there is no photo, **and** `UrlImage` uses that
+  same emoji as its loading and error state, so a row is never a blank square offline.
+- The pantry's `ScannedProductMapper` guesses a `ProductCategory` from the source's tags. Two rules
+  make it behave, and both have a test: read the **most specific tag first** (an apple is tagged
+  `en:plant-based-foods-and-beverages` before `en:fruits`, and reading left to right files it under
+  drinks), and inside one tag let the **priority list** decide (`en:fruit-juices` is a drink; milk is
+  tagged as a beverage but belongs with the dairy). It returns null rather than guessing wrong.
+- **One lookup per barcode per form, and it is load-bearing.** The camera reports the same label on
+  every readable frame — tens a second — and keeps going until the tab switch tears the preview down
+  a frame or more later, on another thread. `PendingScan`'s latch does **not** cover that: it
+  re-opens the moment the pantry takes the code, well before the request returns. The check that
+  actually holds is `observeScans()` dropping a code already in the form. Remove it and one steady
+  hand on one barcode spends the whole 15/min budget in about two seconds — there is a test that
+  fails with exactly that (20 reads → 20 requests). Clearing the form (adding, or dismissing the
+  sheet) re-arms it, so a second jar of the same thing scans fine and a different product is never
+  delayed.
+- The scan flow: `ScannerViewModel` → `PendingScan` → `PantryViewModel.observeScans()` opens the add
+  sheet **immediately** with `LookupStatus.InProgress`, then fills it in. The form is usable
+  throughout — typing the name always beats waiting for a request that may not come back — and
+  `prefilledWith` only writes fields that are still empty, so a lookup landing late cannot overwrite
+  what the user just typed. Shelf life is never prefilled: no product database knows when the jar in
+  this fridge goes off.
+- The ODbL attribution ("Product data from Open Food Facts") is shown in the sheet on a hit. Keep it.
 
 ## Environments
 
@@ -297,7 +410,10 @@ only for real manifest entries (permission, provider, activity).
 
   Room 2.8.4 (ABI 2.2.0) and the `androidx.sqlite` 2.6.2 it asks for are both fine. `sqlite-bundled`
   **2.7.0** is ABI 2.3.0 and is not — never raise `sqlite` past the version Room's POM requires,
-  because nothing else forces it and the failure surfaces two modules away.
+  because nothing else forces it and the failure surfaces two modules away. Ktor is the same story:
+  **3.3.1** is ABI 2.2.0 and is the ceiling; **3.4.0** is ABI 2.3.0 and breaks only the iOS link.
+  Ktor 3.3.1 also drags `kotlinx-serialization-json` up to 1.9.0, which is why the catalog pins it
+  there — 1.9.0 is ABI 2.2.0 and fine.
 - **Icons in `composeResources` must be XML vector drawables, never SVG.** compose-resources
   supports SVG everywhere except Android, where `painterResource` throws
   `IllegalStateException: Android platform doesn't support SVG format` — **at runtime**, so the

@@ -15,7 +15,9 @@ class PantryItemMapperTest {
         expiresOn = LocalDate(2026, 8, 12),
         category = ProductCategory.Dairy,
         quantity = "1 l",
-        barcode = "5901234123457"
+        barcode = "5901234123457",
+        caloriesPer100g = 42,
+        imageUrl = "https://images.openfoodfacts.org/front.200.jpg"
     )
 
     @Test
@@ -24,10 +26,12 @@ class PantryItemMapperTest {
 
         assertEquals("abc", entity.id)
         assertEquals("Milk", entity.name)
-        assertEquals(LocalDate(2026, 8, 12).toEpochDays().toLong(), entity.expiresOnEpochDay)
+        assertEquals(LocalDate(2026, 8, 12).toEpochDays(), entity.expiresOnEpochDay)
         assertEquals("dairy", entity.category)
         assertEquals("1 l", entity.quantity)
         assertEquals("5901234123457", entity.barcode)
+        assertEquals(42, entity.caloriesPer100g)
+        assertEquals("https://images.openfoodfacts.org/front.200.jpg", entity.imageUrl)
     }
 
     @Test

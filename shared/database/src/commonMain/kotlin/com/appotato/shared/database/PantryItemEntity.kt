@@ -29,5 +29,20 @@ public data class PantryItemEntity(
     public val category: String,
     public val quantity: String,
     /** Null for anything typed in by hand rather than scanned. */
-    public val barcode: String? = null
+    public val barcode: String? = null,
+    /**
+     * Null whenever the figure is unknown, which is most rows: it is filled in from a product
+     * database after a scan, and nothing asks the user to type it. Per 100 g rather than per pack,
+     * because that is the one basis every source states and the only one two items can be compared
+     * on.
+     */
+    @ColumnInfo(name = "calories_per_100g")
+    public val caloriesPer100g: Int? = null,
+    /**
+     * A remote photo of the packaging, or null for anything added by hand. The URL is stored rather
+     * than the bytes: it stays valid because these image URLs are revision-stamped, and the image
+     * cache is the layer that should decide what is worth keeping on disk.
+     */
+    @ColumnInfo(name = "image_url")
+    public val imageUrl: String? = null
 )

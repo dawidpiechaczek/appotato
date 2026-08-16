@@ -11,14 +11,18 @@ internal fun PantryItemEntity.toDomain(): PantryItem = PantryItem(
     expiresOn = LocalDate.fromEpochDays(expiresOnEpochDay.toInt()),
     category = ProductCategory.fromCode(category),
     quantity = quantity,
-    barcode = barcode
+    barcode = barcode,
+    caloriesPer100g = caloriesPer100g,
+    imageUrl = imageUrl
 )
 
 internal fun PantryItem.toEntity(): PantryItemEntity = PantryItemEntity(
     id = id,
     name = name,
-    expiresOnEpochDay = expiresOn.toEpochDays().toLong(),
+    expiresOnEpochDay = expiresOn.toEpochDays(),
     category = category.code,
     quantity = quantity,
-    barcode = barcode
+    barcode = barcode,
+    caloriesPer100g = caloriesPer100g,
+    imageUrl = imageUrl
 )

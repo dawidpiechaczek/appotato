@@ -25,6 +25,6 @@ fun setupKoin(
             single<RemoteConfig> { remoteConfig }
         }
     )
-}
+}.also { koin -> koin.setupImageLoader() }
 
 internal actual fun platformModules(): List<Module> = emptyList()

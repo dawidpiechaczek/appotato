@@ -21,4 +21,5 @@ internal fun RoomDatabase.Builder<AppotatoDatabase>.buildWith(
     dispatchers: CoroutineDispatchers
 ): AppotatoDatabase = setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(dispatchers.io)
+    .addAppotatoMigrations()
     .build()

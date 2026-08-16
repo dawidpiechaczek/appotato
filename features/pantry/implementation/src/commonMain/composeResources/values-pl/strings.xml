@@ -31,15 +31,23 @@
     <string name="pantry_add_name_label">Co kupiłeś?</string>
     <string name="pantry_add_days_label">Dni</string>
     <string name="pantry_add_quantity_label">Ilość</string>
+    <string name="pantry_add_calories_label">kcal / 100 g</string>
     <string name="pantry_add_action">Dodaj</string>
     <string name="pantry_add_scanned">Zeskanowany kod: %1$s</string>
     <string name="pantry_delete_action">Usuń</string>
+
+    <string name="pantry_lookup_in_progress">Szukam produktu…</string>
+    <!-- Attribution for the product database the lookup reads, as its licence asks for. -->
+    <string name="pantry_lookup_found">Dane produktu z Open Food Facts</string>
+    <string name="pantry_lookup_not_found">Nie ma jeszcze tego kodu w bazie. Uzupełnij dane ręcznie.</string>
+    <string name="pantry_lookup_failed">Nie udało się połączyć z bazą produktów. Uzupełnij dane ręcznie.</string>
 
     <!-- Compact by design: the badge sits at the end of a row and competes with the product name. -->
     <string name="pantry_badge_days">%1$dd</string>
     <string name="pantry_badge_today">dziś</string>
     <string name="pantry_badge_expired">-%1$dd</string>
     <string name="pantry_item_meta">%1$s • %2$s</string>
+    <string name="pantry_item_calories">%1$d kcal/100 g</string>
 
     <plurals name="pantry_free_slots_left">
         <item quantity="one">Zostało %1$d miejsce</item>

@@ -4,6 +4,7 @@ import com.appotato.shared.billing.api.Entitlement
 import com.appotato.shared.billing.api.SubscriptionStatus
 import com.appotato.shared.billing.fake.BillingFake
 import com.appotato.shared.dispatchers.CoroutineDispatchers
+import com.appotato.shared.product.lookup.fake.ProductLookupFake
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -36,6 +37,7 @@ class PantryViewModelTest {
     private val billing = BillingFake()
     private var repository = PantryRepositoryFake()
     private val pendingScan = PendingScan()
+    private val productLookup = ProductLookupFake()
 
     @BeforeTest
     fun setUp() {
@@ -47,7 +49,7 @@ class PantryViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = PantryViewModel(repository, billing, pendingScan, { today }, dispatchers)
+    private fun viewModel() = PantryViewModel(repository, billing, pendingScan, productLookup, { today }, dispatchers)
 
     private fun item(id: String, name: String, expiresOn: LocalDate) =
         PantryItem(id = id, name = name, expiresOn = expiresOn)

@@ -27,8 +27,13 @@ internal data class PantryState(
     val newItemDays: String = DefaultDaysUntilExpiry,
     val newItemCategory: ProductCategory = ProductCategory.Other,
     val newItemQuantity: String = "",
+    /** Text rather than a number: the field is editable, and "" has to survive a round trip. */
+    val newItemCalories: String = "",
     /** Set by the scanner, carried into the stored item, cleared once it is saved. */
     val newItemBarcode: String? = null,
+    /** The photo the lookup found, if any. Not editable — there is no field to type a URL into. */
+    val newItemImageUrl: String? = null,
+    val lookup: LookupStatus = LookupStatus.Idle,
     val isPro: Boolean = false
 ) {
     val visibleEntries: List<PantryEntry> = categoryFilter
@@ -43,6 +48,9 @@ internal data class PantryState(
 
     val newItemDaysOrNull: Int? = newItemDays.toIntOrNull()
 
+    /** Anything that is not a plain number is stored as "unknown" rather than rejected. */
+    val newItemCaloriesOrNull: Int? = newItemCalories.toIntOrNull()
+
     val canAdd: Boolean = newItemName.isNotBlank() && newItemDaysOrNull != null
 
     /** Null once the user is on Pro — the counter disappears rather than reading "20 of ∞". */
@@ -54,3 +62,30 @@ internal data class PantryState(
         const val DefaultDaysUntilExpiry: String = "7"
     }
 }
+
+/**
+ * Fills the add form in from a scan.
+ *
+ * Every editable field is only written while it is still empty. The lookup takes a moment, and a
+ * user who started typing during it must not have the answer taken out from under their cursor. The
+ * shelf life is never touched — no product database knows when the jar in this fridge goes off.
+ *
+ * The photo is the one unconditional write: there is no field to type one into, so there is nothing
+ * of the user's to protect.
+ */
+internal fun PantryState.prefilledWith(product: ScannedProduct): PantryState = copy(
+    lookup = LookupStatus.Found,
+    newItemName = newItemName.ifBlank { product.name.orEmpty() },
+    newItemQuantity = newItemQuantity.ifBlank { product.quantity.orEmpty() },
+    newItemCalories = newItemCalories.ifBlank { product.caloriesPer100g?.toString().orEmpty() },
+    newItemImageUrl = product.imageUrl,
+    newItemCategory = product.category ?: newItemCategory
+)
+
+/** Everything the scan put in the form, undone. The category and shelf life are the user's. */
+internal fun PantryState.withScanCleared(): PantryState = copy(
+    newItemBarcode = null,
+    newItemCalories = "",
+    newItemImageUrl = null,
+    lookup = LookupStatus.Idle
+)
