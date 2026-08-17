@@ -14,8 +14,14 @@ import org.koin.dsl.module
 
 private const val TAG = "Attestation"
 
+/**
+ * `createdAtStart` because installing the App Check provider is app-startup work, not a dependency
+ * to be resolved on first use. Left lazy, none of the setup below runs until something asks for an
+ * `AttestationTokens` — so the provider is not registered, no token is fetched in the background,
+ * and the debug provider never prints the secret you need to register.
+ */
 public fun attestationModule(): Module = module {
-    single<AttestationTokens> { createAttestationTokens(androidContext()) }
+    single<AttestationTokens>(createdAtStart = true) { createAttestationTokens(androidContext()) }
 }
 
 /**
@@ -41,6 +47,15 @@ private fun createAttestationTokens(context: Context): AttestationTokens =
                         PlayIntegrityAppCheckProviderFactory.getInstance()
                     }
                 )
+                // Fetches a token in the background now and keeps it fresh, so the first request
+                // that needs one is not also paying for a Play Integrity round trip — on a cold
+                // device that attestation is seconds, and it would land on top of the model call
+                // the user is already waiting for.
+                //
+                // It is also what makes the debug provider print its secret at startup: the
+                // provider is created on the first token request, and without this nothing would
+                // ask until a feature did.
+                setTokenAutoRefreshEnabled(true)
             }
         )
     }

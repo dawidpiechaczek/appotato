@@ -11,6 +11,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "contract:check": "tsc && node lib/contract-check.js",
+    "smoke": "tsc && node lib/smoke.js",
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy:dev": "firebase deploy --only functions -P dev",
     "deploy:prod": "firebase deploy --only functions -P prod"
@@ -21,6 +22,7 @@
     "firebase-functions": "^7.3.2"
   },
   "devDependencies": {
+    "firebase-tools": "^15.27.0",
     "typescript": "^5.9.3"
   }
 }

@@ -356,6 +356,21 @@ the device.
 `.firebaserc` aliases: `dev` and `staging` both point at `appotato-dev`, `prod` at `appotato`.
 Deploy with `npm run deploy:dev` / `deploy:prod` from `functions/`.
 
+**The Firebase CLI is pinned as a devDependency**, so run it as `npx firebase` **from `functions/`**
+— a globally installed one is a different version and this project needs a current one: the CLI
+analyses the functions codebase with its own bundled Node, and anything older than 15.x fails on
+`firebase-admin`'s ESM-only `jose` with `ERR_REQUIRE_ESM`, registering zero functions rather than
+erroring usefully. Pinning it also keeps every machine and CI on one version.
+
+Two things bite when running CLI commands from the wrong directory: `npx` resolves the CLI out of
+`functions/node_modules`, and `.firebaserc` is found by walking up from the working directory. Run
+`firebase … --project dev` from outside the repo and the alias never resolves — the CLI takes `dev`
+as a literal project id and fails with a confusing 403.
+
+The dev function is deployed at
+`https://europe-central2-appotato-dev.cloudfunctions.net/suggestRecipes`; that URL is what
+`recipes_endpoint` has to hold in that project's remote config.
+
 ### The wire format is written twice — change both
 
 Kotlin (`RecipeDto.kt`) and TypeScript (`RECIPES_SCHEMA` in `claude.ts`, `parseIngredients` in

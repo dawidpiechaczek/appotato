@@ -2,6 +2,9 @@ node_modules/
 lib/
 *.local
 
+# Crash logs the emulator leaves behind.
+*-debug.log
+
 # Secrets the emulator reads. The deployed function takes its key from Secret Manager, but running
 # locally needs it on disk — and that file must never be the one that leaks it.
 .env

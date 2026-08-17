@@ -2,6 +2,7 @@ package com.appotato.di
 
 import com.appotato.features.pantry.implementation.pantryModule
 import com.appotato.features.paywall.implementation.paywallModule
+import com.appotato.features.recipes.implementation.recipesModule
 import com.appotato.shared.app.update.implementation.appUpdateModule
 import com.appotato.shared.billing.implementation.billingModule
 import com.appotato.shared.database.databaseModule
@@ -33,7 +34,8 @@ internal fun appModules(): List<Module> = platformModules() + listOf(
     productLookupModule(),
     recipeSourceModule(),
     pantryModule(),
-    paywallModule()
+    paywallModule(),
+    recipesModule()
 )
 
 /**

@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="recipes_title">Przepisy</string>
-    <string name="recipes_empty_title">Jeszcze nic tu nie ma</string>
-    <string name="recipes_empty_body">Podpowiedzi, co ugotować z produktów, którym kończy się ważność, pojawią się tutaj.</string>
+    <string name="recipes_title">Przepisy Zero-Waste</string>
+    <string name="recipes_refresh">Odśwież</string>
+    <string name="recipes_loading">Generujemy dla Ciebie przepisy…</string>
+
+    <!-- Dative case: "produktowi/produktom kończy się ważność", same as the pantry banner. -->
+    <plurals name="recipes_subtitle_count">
+        <item quantity="one">Z %1$d produktu, któremu kończy się ważność</item>
+        <item quantity="few">Z %1$d produktów, którym kończy się ważność</item>
+        <item quantity="many">Z %1$d produktów, którym kończy się ważność</item>
+        <item quantity="other">Z %1$d produktu, któremu kończy się ważność</item>
+    </plurals>
+
+    <string name="recipes_generated_notice">Przepisy wygenerowane na podstawie produktów, które wkrótce się przeterminują</string>
+
+    <string name="recipes_empty_title">Nic się nie kończy</string>
+    <string name="recipes_empty_body">Pomysły na to, co ugotować, pojawią się tutaj, gdy coś w spiżarni zbliży się do daty ważności.</string>
+
+    <string name="recipes_no_ideas_title">Tym razem bez pomysłów</string>
+    <string name="recipes_no_ideas_body">Nic nie wróciło dla tego, co masz. Spróbuj ponownie, gdy w spiżarni będzie trochę więcej.</string>
+
+    <string name="recipes_error_title">Nie udało się pobrać propozycji</string>
+    <string name="recipes_error_body">Sprawdź połączenie i spróbuj ponownie.</string>
+    <string name="recipes_retry">Spróbuj ponownie</string>
+
+    <string name="recipes_uses">Wykorzystuje z Twojej lodówki:</string>
+    <string name="recipes_missing">Brakujące: %1$s</string>
+    <string name="recipes_minutes">%1$d min</string>
+    <string name="recipes_match">%1$d% dopasowania</string>
+    <string name="recipes_steps_show">Sposób przygotowania</string>
 </resources>

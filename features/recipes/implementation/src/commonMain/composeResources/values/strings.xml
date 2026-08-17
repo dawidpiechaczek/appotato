@@ -1,6 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="recipes_title">Recipes</string>
-    <string name="recipes_empty_title">Nothing here yet</string>
-    <string name="recipes_empty_body">Ideas for what to cook with the items that are about to expire will show up here.</string>
+    <string name="recipes_title">Zero-waste recipes</string>
+    <string name="recipes_refresh">Refresh</string>
+    <string name="recipes_loading">Generating recipes for you…</string>
+
+    <plurals name="recipes_subtitle_count">
+        <item quantity="one">From %1$d item about to expire</item>
+        <item quantity="other">From %1$d items about to expire</item>
+    </plurals>
+
+    <string name="recipes_generated_notice">Generated from the products that are about to expire</string>
+
+    <string name="recipes_empty_title">Nothing is expiring</string>
+    <string name="recipes_empty_body">Ideas for what to cook will show up here once something in your pantry is close to its date.</string>
+
+    <string name="recipes_no_ideas_title">No ideas this time</string>
+    <string name="recipes_no_ideas_body">Nothing came back for what you have. Try again once there is a bit more in the pantry.</string>
+
+    <string name="recipes_error_title">Could not get suggestions</string>
+    <string name="recipes_error_body">Check your connection and try again.</string>
+    <string name="recipes_retry">Try again</string>
+
+    <string name="recipes_uses">Uses from your fridge:</string>
+    <string name="recipes_missing">Missing: %1$s</string>
+    <string name="recipes_minutes">%1$d min</string>
+    <!-- How much of the recipe you already have, so a full match reads as "cook this one". -->
+    <string name="recipes_match">%1$d% match</string>
+    <string name="recipes_steps_show">Method</string>
 </resources>

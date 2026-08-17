@@ -23,9 +23,31 @@ class ProxiedRecipeSourceTest {
 
     private val requests = mutableListOf<HttpRequestData>()
 
-    private class RemoteConfigStub(private val endpoint: String) : RemoteConfig {
-        override fun refresh(onResult: (Boolean) -> Unit) = onResult(true)
-        override fun getString(key: String): String = if (key == "recipes_endpoint") endpoint else ""
+    /**
+     * [availableOnlyAfterRefresh] models the state the app is actually in on a cold start: the value
+     * is published in the console but nothing has fetched it yet, so it reads as "" until a refresh.
+     */
+    private class RemoteConfigStub(
+        private val endpoint: String,
+        private val availableOnlyAfterRefresh: Boolean = false,
+        private val refreshSucceeds: Boolean = true
+    ) : RemoteConfig {
+        var refreshCount: Int = 0
+            private set
+        private var fetched = !availableOnlyAfterRefresh
+
+        override fun refresh(onResult: (Boolean) -> Unit) {
+            refreshCount++
+            if (refreshSucceeds) fetched = true
+            onResult(refreshSucceeds)
+        }
+
+        override fun getString(key: String): String = when {
+            key != "recipes_endpoint" -> ""
+            !fetched -> ""
+            else -> endpoint
+        }
+
         override fun getBoolean(key: String): Boolean = false
         override fun getLong(key: String): Long = 0L
     }
@@ -37,7 +59,7 @@ class ProxiedRecipeSourceTest {
     private fun source(
         status: HttpStatusCode = HttpStatusCode.OK,
         body: String = EMPTY_BODY,
-        endpoint: String = ENDPOINT,
+        config: RemoteConfigStub = RemoteConfigStub(ENDPOINT),
         attestationToken: String? = "attest-123"
     ) = ProxiedRecipeSource(
         client = appotatoHttpClient(
@@ -51,7 +73,7 @@ class ProxiedRecipeSourceTest {
             },
             maxRetries = 0
         ),
-        remoteConfig = RemoteConfigStub(endpoint),
+        remoteConfig = config,
         attestation = AttestationStub(attestationToken)
     )
 
@@ -79,10 +101,43 @@ class ProxiedRecipeSourceTest {
 
     @Test
     fun `Given no endpoint is published When suggestions are asked for Then nothing is sent`() = runTest {
-        val result = source(endpoint = "").suggestFor(request())
+        val result = source(config = RemoteConfigStub("")).suggestFor(request())
 
         assertTrue(result.isFailure)
         assertTrue(requests.isEmpty(), "a request went out with no endpoint configured")
+    }
+
+    @Test
+    fun `Given config was never fetched When suggestions are asked for Then it fetches and proceeds`() =
+        runTest {
+            // The state every cold start is in: published in the console, not yet fetched by the
+            // app. Nothing else in the app refreshes config, so if this did not, the endpoint would
+            // read as "" forever.
+            val config = RemoteConfigStub(ENDPOINT, availableOnlyAfterRefresh = true)
+            val result = source(config = config).suggestFor(request())
+
+            assertTrue(result.isSuccess, "a published endpoint was not picked up after a refresh")
+            assertEquals(1, config.refreshCount)
+            assertEquals(ENDPOINT, requests.single().url.toString())
+        }
+
+    @Test
+    fun `Given config is already fetched When suggestions are asked for Then it does not refresh`() =
+        runTest {
+            val config = RemoteConfigStub(ENDPOINT)
+            source(config = config).suggestFor(request())
+
+            assertEquals(0, config.refreshCount, "spent a fetch on a value it already had")
+        }
+
+    @Test
+    fun `Given the fetch fails When suggestions are asked for Then it fails without sending`() = runTest {
+        val config = RemoteConfigStub(ENDPOINT, availableOnlyAfterRefresh = true, refreshSucceeds = false)
+        val result = source(config = config).suggestFor(request())
+
+        assertTrue(result.isFailure)
+        assertEquals(1, config.refreshCount)
+        assertTrue(requests.isEmpty(), "a request went out with no endpoint to send it to")
     }
 
     @Test

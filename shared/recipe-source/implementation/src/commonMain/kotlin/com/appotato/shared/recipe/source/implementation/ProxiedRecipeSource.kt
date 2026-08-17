@@ -6,6 +6,7 @@ import com.appotato.shared.recipe.source.api.Recipe
 import com.appotato.shared.recipe.source.api.RecipeRequest
 import com.appotato.shared.recipe.source.api.RecipeSource
 import com.appotato.shared.remote.config.api.RemoteConfig
+import com.appotato.shared.remote.config.api.refresh
 import io.ktor.client.HttpClient
 import io.ktor.client.call.NoTransformationFoundException
 import io.ktor.client.call.body
@@ -35,9 +36,7 @@ internal class ProxiedRecipeSource(
 ) : RecipeSource {
 
     override suspend fun suggestFor(request: RecipeRequest): Result<List<Recipe>> {
-        // Unset or unfetched comes back as "". Failing on it is deliberate: the alternative is
-        // guessing a URL, and a wrong guess is a request sent to somebody else's backend.
-        val endpoint = remoteConfig.getString(ENDPOINT_KEY)
+        val endpoint = endpoint()
 
         // Not asked for when there is nowhere to send it — attesting costs a Play Integrity round
         // trip, and a token this call will not use is one the device paid for and threw away.
@@ -51,6 +50,25 @@ internal class ProxiedRecipeSource(
                 Result.failure(IllegalStateException("No attestation token"))
             else -> post(endpoint, attestationToken, request)
         }
+    }
+
+    /**
+     * An unfetched key and an unpublished one both read as `""`, and the difference matters: the
+     * first is fixable here, the second is not.
+     *
+     * So a blank value earns exactly one fetch before it is believed. Nothing else in the app
+     * refreshes remote config — `AppUpdateChecker` would, but nothing calls it — which would
+     * otherwise leave this reading `""` forever no matter what is published in the console.
+     *
+     * Doing it here rather than at startup keeps the fix next to the value that needs it: no
+     * ordering to get right, and a later launch reads the SDK's cached value without a round trip.
+     */
+    private suspend fun endpoint(): String {
+        val published = remoteConfig.getString(ENDPOINT_KEY)
+        if (published.isNotBlank()) return published
+
+        remoteConfig.refresh()
+        return remoteConfig.getString(ENDPOINT_KEY)
     }
 
     private suspend fun post(

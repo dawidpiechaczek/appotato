@@ -9,6 +9,13 @@ import Foundation
 /// Must subclass NSObject: a Swift type can only adopt a Kotlin-exported protocol through ObjC.
 final class FirebaseAttestationTokens: NSObject, AttestationTokens {
 
+    override init() {
+        // Parity with the Android binding: fetch a token in the background now and keep it fresh,
+        // so the first request that needs one is not also waiting on App Attest.
+        AppCheck.appCheck().isTokenAutoRefreshEnabled = true
+        super.init()
+    }
+
     /// `limitedUse: false` reuses the cached token until it is close to expiry, which is what we
     /// want — a fresh App Attest assertion on every suggestion request would be a round trip per
     /// request for no extra safety.
