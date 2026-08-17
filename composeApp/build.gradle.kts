@@ -20,10 +20,11 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
-            // Swift implements Telemetry and RemoteConfig itself, so those contracts have to be
-            // visible in the framework.
+            // Swift implements Telemetry, RemoteConfig and AttestationTokens itself, so those
+            // contracts have to be visible in the framework.
             export(projects.shared.telemetry.api)
             export(projects.shared.remoteConfig.api)
+            export(projects.shared.attestation.api)
         }
     }
 
@@ -34,6 +35,7 @@ kotlin {
             implementation(libs.koin.android)
             implementation(projects.shared.telemetry.implementation)
             implementation(projects.shared.remoteConfig.implementation)
+            implementation(projects.shared.attestation.implementation)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -50,6 +52,7 @@ kotlin {
             implementation(libs.koin.core)
             api(projects.shared.telemetry.api)
             api(projects.shared.remoteConfig.api)
+            api(projects.shared.attestation.api)
 
             implementation(projects.shared.appUpdate.api)
             implementation(projects.shared.appUpdate.implementation)
@@ -65,6 +68,7 @@ kotlin {
             implementation(projects.shared.billing.api)
             implementation(projects.shared.billing.implementation)
             implementation(projects.shared.productLookup.implementation)
+            implementation(projects.shared.recipeSource.implementation)
             implementation(projects.features.paywall.implementation)
             implementation(projects.features.recipes.implementation)
             implementation(projects.features.pantry.implementation)

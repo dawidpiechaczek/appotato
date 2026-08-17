@@ -1,6 +1,7 @@
 package com.appotato.di
 
 import android.app.Application
+import com.appotato.shared.attestation.implementation.attestationModule
 import com.appotato.shared.remote.config.implementation.remoteConfigModule
 import com.appotato.shared.telemetry.implementation.telemetryModule
 import org.koin.android.ext.koin.androidContext
@@ -15,4 +16,5 @@ fun setupKoin(application: Application): KoinApplication = startKoin {
     modules(appModules())
 }.also { koin -> koin.setupImageLoader() }
 
-internal actual fun platformModules(): List<Module> = listOf(telemetryModule(), remoteConfigModule())
+internal actual fun platformModules(): List<Module> =
+    listOf(telemetryModule(), remoteConfigModule(), attestationModule())

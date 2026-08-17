@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "appotato-dev",
+    "dev": "appotato-dev",
+    "staging": "appotato-dev",
+    "prod": "appotato"
+  }
+}

@@ -11,7 +11,14 @@ struct iOSApp: App {
         let remoteConfig: ComposeApp.RemoteConfig = firebaseConfigured
             ? FirebaseRemoteConfigBinding()
             : NoOpRemoteConfig()
-        KoinIosKt.setupKoin(telemetry: telemetry, remoteConfig: remoteConfig)
+        let attestation: AttestationTokens = firebaseConfigured
+            ? FirebaseAttestationTokens()
+            : NoOpAttestationTokens()
+        KoinIosKt.setupKoin(
+            telemetry: telemetry,
+            remoteConfig: remoteConfig,
+            attestation: attestation
+        )
     }
 
     /// Android is initialised by FirebaseInitProvider before Application.onCreate; iOS has no

@@ -11,6 +11,7 @@
 		AP0741000000000000000006 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AP0741000000000000000003 /* FirebaseCrashlytics */; };
 		AP0741000000000000000007 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = AP0741000000000000000004 /* FirebaseCore */; };
 		AP0741000000000000000011 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = AP0741000000000000000010 /* FirebaseRemoteConfig */; };
+		AP0741000000000000000013 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = AP0741000000000000000012 /* FirebaseAppCheck */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 				AP0741000000000000000006 /* FirebaseCrashlytics in Frameworks */,
 				AP0741000000000000000007 /* FirebaseCore in Frameworks */,
 				AP0741000000000000000011 /* FirebaseRemoteConfig in Frameworks */,
+				AP0741000000000000000013 /* FirebaseAppCheck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -101,6 +103,7 @@
 				AP0741000000000000000003 /* FirebaseCrashlytics */,
 				AP0741000000000000000004 /* FirebaseCore */,
 				AP0741000000000000000010 /* FirebaseRemoteConfig */,
+				AP0741000000000000000012 /* FirebaseAppCheck */,
 			);
 			productName = iosApp;
 			productReference = B9DA97B12DC1472C00A4DA20 /* Appotato.app */;
@@ -831,6 +834,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AP0741000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseRemoteConfig;
+		};
+		AP0741000000000000000012 /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AP0741000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

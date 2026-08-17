@@ -25,6 +25,9 @@ shared/
   billing/{api,implementation,fake}     Billing — subscriptions and entitlements; impl is a no-op stub
   product-lookup/{api,implementation,fake}  ProductLookup — barcode → product, Open Food Facts-backed
   ingredients/              name or OFF tags → a stable ingredient code; pure functions, no DI
+  attestation/{api,implementation}      AttestationTokens — App Check, proves a call came from the app
+  recipe-source/{api,implementation,fake}  RecipeSource — expiring items → recipes, via our own backend
+functions/                  Firebase Cloud Functions (TypeScript) — see "The backend" below
 features/                   one submodule per screen or per flow
   login/{api,implementation}            no sources yet, module shell only
   pantry/implementation                 main screen: item list, add/delete, scanner tab, free-tier gate
@@ -318,11 +321,74 @@ which is ordinary for own-brand and local items), and a failure (the question co
   this fridge goes off.
 - The ODbL attribution ("Product data from Open Food Facts") is shown in the sheet on a hit. Keep it.
 
+## The backend (`functions/`)
+
+The app has exactly one server-side dependency and one reason for it: **a key it must not hold**.
+Open Food Facts needs no key, so the app calls it directly; a recipe generator does, and a key in a
+KMP binary is a key anyone can extract. `functions/` is a TypeScript Firebase Functions project that
+exists to hold it — not to be an application server. Anything that does not need a secret stays on
+the device.
+
+- **`suggestRecipes`** — `POST`, region `europe-central2`, takes `{ingredients, languageTag,
+  maxRecipes}` and returns `{recipes}`. The model, the prompt and the vendor live here, so changing
+  any of them is a deploy rather than an app release.
+- **The API key is in Secret Manager** (`ANTHROPIC_API_KEY`), never in the repo, never in the env.
+  Provision it with `firebase functions:secrets:set`.
+- **App Check is the whole access control.** There are no user accounts, so there is nothing to
+  authenticate a caller *as*; the token proves the call came from a real build of the app. Verified
+  in the handler rather than declared on the function so the emulator stays usable —
+  `FUNCTIONS_EMULATOR` is the only bypass, and it does not exist in production.
+- **Firestore caches by ingredient set.** The key is the sorted resolved ingredient codes plus the
+  language, deliberately *not* the expiry dates: pantries overlap heavily, that overlap is the whole
+  cost argument for generating rather than licensing recipes, and caching per day would throw it
+  away. 7-day TTL.
+- **Structured outputs, not "reply with JSON".** The response shape is enforced by the API, so there
+  is no repair pass and no retry loop. The schema has to stay inside what structured outputs
+  support: no `minItems`, no `minimum`, `anyOf` rather than a `["integer","null"]` type union, and
+  `additionalProperties: false` on every object — that last one is required, not optional.
+- `stop_reason` is checked before the body is parsed. A refusal and a `max_tokens` truncation both
+  mean the body is not schema-shaped, and neither is worth retrying with the same input.
+- The model is **Haiku**, and the cost case rests on it. It takes neither `effort` nor adaptive
+  `thinking` — passing either is an error on that model — so the request sets neither.
+- Its prompt caching will not engage either: the minimum cacheable prefix on that model is far
+  longer than this system prompt. The Firestore cache is the one that matters here.
+
+`.firebaserc` aliases: `dev` and `staging` both point at `appotato-dev`, `prod` at `appotato`.
+Deploy with `npm run deploy:dev` / `deploy:prod` from `functions/`.
+
+### The wire format is written twice — change both
+
+Kotlin (`RecipeDto.kt`) and TypeScript (`RECIPES_SCHEMA` in `claude.ts`, `parseIngredients` in
+`request.ts`) describe the same JSON, and neither compiler can see the other. **Renaming, adding or
+removing a property means editing both sides in the same change**, plus the fixtures in
+`RecipeContractTest.kt`.
+
+This matters more than the usual duplication, because it fails *silently*: the client's
+`ignoreUnknownKeys` + `coerceInputValues` mean a mismatch never throws — the field takes its
+default and the user gets a card with an empty title instead of an error.
+
+Two guards, and they cover opposite directions:
+
+- `./gradlew :shared:recipe-source:implementation:test` — a field that stops arriving reads as
+  blank, and the contract test asserts values *land*, not merely that parsing succeeded.
+- `npm run contract:check` (in `functions/`) — reads the fixtures straight out of
+  `RecipeContractTest.kt` and checks them against the schema the model is constrained with and the
+  parser the handler runs. Exits 1 on drift.
+
+The fixtures live on the Kotlin side because `commonTest` runs on iOS, where there is no portable
+way to read a file; Node can read Kotlin source, Kotlin/Native cannot read arbitrary files. Neither
+guard runs automatically before a deploy yet — wire them into CI when there is one.
+
 ## Environments
 
-Three environments, one per Firebase project's worth of config. The suffix lives on the Android
-flavor only — adding one to the `debug` build type too would double the number of package names
-to register.
+Three environments, but **two Firebase projects**: `dev` and `staging` share `appotato-dev` (both
+package names are registered in it) and only `prod` has `appotato` to itself. That matters wherever
+something is configured per project rather than per environment — remote config values, App Check
+registrations and the deployed functions are shared between dev and staging, so a console change
+made "for dev" lands on staging too.
+
+The suffix lives on the Android flavor only — adding one to the `debug` build type too would double
+the number of package names to register.
 
 | Environment | Android variant | applicationId | iOS scheme / configuration | bundle id |
 |---|---|---|---|---|

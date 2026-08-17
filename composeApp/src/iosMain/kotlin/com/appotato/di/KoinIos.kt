@@ -1,5 +1,6 @@
 package com.appotato.di
 
+import com.appotato.shared.attestation.api.AttestationTokens
 import com.appotato.shared.remote.config.api.RemoteConfig
 import com.appotato.shared.telemetry.api.Telemetry
 import org.koin.core.KoinApplication
@@ -8,7 +9,8 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**
- * Called from iOSApp.swift with the Swift-side [Telemetry] and [RemoteConfig] implementations.
+ * Called from iOSApp.swift with the Swift-side [Telemetry], [RemoteConfig] and [AttestationTokens]
+ * implementations.
  *
  * The Firebase iOS SDK is Swift/ObjC and lives in the Xcode project, so those bindings are written
  * there and injected here instead of being bridged into Kotlin/Native through cinterop. That keeps
@@ -17,12 +19,14 @@ import org.koin.dsl.module
  */
 fun setupKoin(
     telemetry: Telemetry,
-    remoteConfig: RemoteConfig
+    remoteConfig: RemoteConfig,
+    attestation: AttestationTokens
 ): KoinApplication = startKoin {
     modules(
         appModules() + module {
             single<Telemetry> { telemetry }
             single<RemoteConfig> { remoteConfig }
+            single<AttestationTokens> { attestation }
         }
     )
 }.also { koin -> koin.setupImageLoader() }
